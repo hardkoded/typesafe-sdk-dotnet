@@ -16,6 +16,34 @@ public sealed class QuestionAndRequestTests
     }
 
     [Fact]
+    public void Choice_accepts_label_description_tuples()
+    {
+        var question = Question.Choice("q", ("a", "desc"), ("b", null));
+        Assert.Equal("choice", question.Type);
+        Assert.Equal("desc", question.Criteria["a"]);
+        Assert.Null(question.Criteria["b"]);
+    }
+
+    [Fact]
+    public void Choice_rejects_duplicate_tuple_labels()
+    {
+        var ex = Assert.Throws<TypeSafeException>(() => Question.Choice("q", ("a", "one"), ("a", "two")));
+        Assert.Contains("Duplicate choice label \"a\"", ex.Message);
+    }
+
+    [Fact]
+    public void Map_builds_a_question_dictionary_and_rejects_duplicate_names()
+    {
+        var questions = Question.Map(("noul", Question.Noul("x")), ("score", Question.Score("y", "low", "high")));
+        Assert.Equal(2, questions.Count);
+        Assert.IsType<NoulQuestion>(questions["noul"]);
+
+        var ex = Assert.Throws<TypeSafeException>(() =>
+            Question.Map(("q", Question.Noul("a")), ("q", Question.Noul("b"))));
+        Assert.Contains("Duplicate question \"q\"", ex.Message);
+    }
+
+    [Fact]
     public void Noul_allows_describing_one_side_both_or_neither()
     {
         var plain = Question.Noul("q");
@@ -68,6 +96,26 @@ public sealed class QuestionAndRequestTests
         Assert.Equal("noul", body.GetProperty("questions").GetProperty("q1").GetProperty("type").GetString());
         Assert.Equal("x", body.GetProperty("questions").GetProperty("q1").GetProperty("instructions").GetString());
         Assert.False(body.GetProperty("questions").GetProperty("q1").TryGetProperty("criteria", out _));
+        Assert.Equal(0.5, result.GetNoul("q1").Noul);
+    }
+
+    [Fact]
+    public async Task Posts_systemOne_payload_from_question_tuples()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler, o => o.BaseUrl = "https://x.test");
+        var result = await client.SystemOneAsync(
+            new Dictionary<string, object?> { ["a"] = 1 },
+            ("q1", Question.Noul("x")),
+            ("choice", Question.Choice("which?", ("yes", null), ("no", "negatory"))));
+
+        var body = handler.Requests[0].Body!.Value;
+        Assert.Equal("jev-latest", body.GetProperty("model").GetString());
+        Assert.Equal(1, body.GetProperty("state").GetProperty("a").GetInt32());
+        Assert.Equal("noul", body.GetProperty("questions").GetProperty("q1").GetProperty("type").GetString());
+        Assert.Equal("choice", body.GetProperty("questions").GetProperty("choice").GetProperty("type").GetString());
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("questions").GetProperty("choice").GetProperty("criteria").GetProperty("yes").ValueKind);
+        Assert.Equal("negatory", body.GetProperty("questions").GetProperty("choice").GetProperty("criteria").GetProperty("no").GetString());
         Assert.Equal(0.5, result.GetNoul("q1").Noul);
     }
 

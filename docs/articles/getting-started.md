@@ -26,15 +26,10 @@ using TypeSafe.AI.Sdk;
 using var client = new TypeSafeClient();
 var response = await client.SystemOneAsync(
     new { document = "I was charged twice. Please fix this ASAP." },
-    new Dictionary<string, Question>
-    {
-        ["category"] = Question.Choice("What is this ticket about?", new Dictionary<string, object?>
-        {
-            ["billing"] = null,
-            ["technical"] = null,
-            ["other"] = null,
-        }),
-    });
+    ("category", Question.Choice("What is this ticket about?",
+        ("billing", null),
+        ("technical", null),
+        ("other", null))));
 
 Console.WriteLine(response.GetChoice("category").Choice);
 ```

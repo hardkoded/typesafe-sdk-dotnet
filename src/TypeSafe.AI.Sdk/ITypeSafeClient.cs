@@ -48,4 +48,20 @@ public interface ITypeSafeClient
         string? model = null,
         RequestOptions? options = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Answer named questions about text or structured state.
+    /// Duplicate names throw. Use the dictionary overload for <c>model</c>, options, or a cancellation token.
+    /// </summary>
+    Task<SystemOneResult> SystemOneAsync(
+        object? state,
+        params (string Name, Question Question)[] questions);
+
+    /// <summary>
+    /// Answer named questions and return the HTTP response metadata.
+    /// Duplicate names throw. Use the dictionary overload for <c>model</c>, options, or a cancellation token.
+    /// </summary>
+    Task<TypeSafeResponse<SystemOneResult>> SystemOneWithResponseAsync(
+        object? state,
+        params (string Name, Question Question)[] questions);
 }

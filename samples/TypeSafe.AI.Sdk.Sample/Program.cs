@@ -15,16 +15,11 @@ var result = await client.SystemOneAsync(
     {
         document = "I was charged twice. Please fix this ASAP.",
     },
-    new Dictionary<string, Question>
-    {
-        ["category"] = Question.Choice("What is this ticket about?", new Dictionary<string, object?>
-        {
-            ["billing"] = "Payments, invoicing, refunds",
-            ["technical"] = "Bugs, outages, integrations",
-            ["other"] = null,
-        }),
-        ["urgent"] = Question.Noul("Does this convey urgency?"),
-    });
+    ("category", Question.Choice("What is this ticket about?",
+        ("billing", "Payments, invoicing, refunds"),
+        ("technical", "Bugs, outages, integrations"),
+        ("other", null))),
+    ("urgent", Question.Noul("Does this convey urgency?")));
 
 var category = result.GetChoice("category");
 var urgent = result.GetNoul("urgent");
