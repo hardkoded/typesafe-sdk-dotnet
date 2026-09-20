@@ -8,7 +8,7 @@ Install the package and ask your first System One question.
 dotnet add package TypeSafe.AI.Sdk
 ```
 
-Targets `net10.0`, `net8.0`, and `netstandard2.0`. Building the library itself requires the .NET 10 SDK.
+Targets `net10.0` and `netstandard2.0`. Building the library itself requires the .NET 10 SDK.
 
 ## API key
 
