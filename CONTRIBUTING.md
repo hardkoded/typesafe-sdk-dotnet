@@ -16,7 +16,7 @@ This repo is a community .NET port of [`typesafe-ai/typesafe-sdk-js`](https://gi
 
 ## Development
 
-Requires the .NET 8 SDK (`global.json`).
+Requires the .NET 10 SDK (`global.json`, currently 10.0.401). The library also targets `net8.0` and `netstandard2.0` for NuGet consumers.
 
 ```bash
 dotnet restore
