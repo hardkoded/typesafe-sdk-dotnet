@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5E97B6DF-B82A-48AB-81E2-8E29B4F595C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeSafe.AI.Sdk", "src\TypeSafe.AI.Sdk\TypeSafe.AI.Sdk.csproj", "{9F17FF58-BBD1-499E-9859-7534F39801C0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{47C174A3-C1FA-4CC5-8AA1-70E564A70871}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeSafe.AI.Sdk.Tests", "tests\TypeSafe.AI.Sdk.Tests\TypeSafe.AI.Sdk.Tests.csproj", "{60B5033C-690D-4589-87EF-D60EE0264CA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeSafe.AI.Sdk.IntegrationTests", "tests\TypeSafe.AI.Sdk.IntegrationTests\TypeSafe.AI.Sdk.IntegrationTests.csproj", "{54EC4E1D-B506-4DF7-9E24-3508EA905BC1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{E2FFBA13-A3C7-44BB-9763-6EC60E6B19A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeSafe.AI.Sdk.Sample", "samples\TypeSafe.AI.Sdk.Sample\TypeSafe.AI.Sdk.Sample.csproj", "{EF5323FC-AF09-4DD8-9CE3-4008A61CF7F3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F17FF58-BBD1-499E-9859-7534F39801C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F17FF58-BBD1-499E-9859-7534F39801C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F17FF58-BBD1-499E-9859-7534F39801C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F17FF58-BBD1-499E-9859-7534F39801C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60B5033C-690D-4589-87EF-D60EE0264CA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60B5033C-690D-4589-87EF-D60EE0264CA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60B5033C-690D-4589-87EF-D60EE0264CA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60B5033C-690D-4589-87EF-D60EE0264CA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54EC4E1D-B506-4DF7-9E24-3508EA905BC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54EC4E1D-B506-4DF7-9E24-3508EA905BC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54EC4E1D-B506-4DF7-9E24-3508EA905BC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54EC4E1D-B506-4DF7-9E24-3508EA905BC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF5323FC-AF09-4DD8-9CE3-4008A61CF7F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF5323FC-AF09-4DD8-9CE3-4008A61CF7F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF5323FC-AF09-4DD8-9CE3-4008A61CF7F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF5323FC-AF09-4DD8-9CE3-4008A61CF7F3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9F17FF58-BBD1-499E-9859-7534F39801C0} = {5E97B6DF-B82A-48AB-81E2-8E29B4F595C0}
+		{60B5033C-690D-4589-87EF-D60EE0264CA8} = {47C174A3-C1FA-4CC5-8AA1-70E564A70871}
+		{54EC4E1D-B506-4DF7-9E24-3508EA905BC1} = {47C174A3-C1FA-4CC5-8AA1-70E564A70871}
+		{EF5323FC-AF09-4DD8-9CE3-4008A61CF7F3} = {E2FFBA13-A3C7-44BB-9763-6EC60E6B19A3}
+	EndGlobalSection
+EndGlobal

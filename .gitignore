@@ -1,0 +1,48 @@
+## .NET
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+## IDE
+.vs/
+.idea/
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/extensions.json
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Secrets / local env
+.env
+.env.*
+!.env.example
+*.pfx
+secrets.json
+
+## Coverage / tooling
+coverage/
+coverage.xml
+*.coverage
+*.coveragexml
+.dotnet/

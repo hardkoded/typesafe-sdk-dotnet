@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TypeSafe.AI.Sdk — .NET client for TypeSafe AI</title>
+  <meta name="description" content="Community .NET SDK for TypeSafe AI by Hardkoded. Port of @typesafe-ai/sdk." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="bar">
+    <div class="wrap">
+      <a class="brand" href="./">TypeSafe.AI.Sdk</a>
+      <nav>
+        <a href="https://docs.typesafe.ai/sdk">TypeSafe docs</a>
+        <a href="https://github.com/hardkoded/typesafe-sdk-dotnet">GitHub</a>
+        <a href="https://www.nuget.org/packages/TypeSafe.AI.Sdk">NuGet</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="kicker">Hardkoded community port</p>
+    <h1>Typed System One judgments in C#.</h1>
+    <p class="lede">
+      TypeSafe’s System One models (including Jev) turn application state into structured
+      Choice, Score, and Noul answers your code can use directly. This package is a
+      .NET port of <a href="https://github.com/typesafe-ai/typesafe-sdk-js"><code>@typesafe-ai/sdk</code></a>,
+      not an official TypeSafe product.
+    </p>
+
+    <pre class="install"><code>dotnet add package TypeSafe.AI.Sdk</code></pre>
+
+    <h2>Quickstart</h2>
+    <p>Set <code>TYPESAFE_API_KEY</code>, then ask a Choice — same shape as the JS quickstart.</p>
+    <pre><code>using TypeSafe.AI.Sdk;
+
+using var client = new TypeSafeClient();
+var response = await client.SystemOneAsync(
+    new { document = "I was charged twice. Please fix this ASAP." },
+    new Dictionary&lt;string, Question&gt;
+    {
+        ["category"] = Question.Choice("What is this ticket about?", new Dictionary&lt;string, object?&gt;
+        {
+            ["billing"] = null,
+            ["technical"] = null,
+            ["other"] = null,
+        }),
+    });
+
+Console.WriteLine(response.GetChoice("category").Choice);</code></pre>
+
+    <h2>Question types</h2>
+    <table>
+      <thead>
+        <tr><th>Need</th><th>Builder</th><th>Answer</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>One of a defined set</td>
+          <td><code>Question.Choice</code></td>
+          <td><code>choice</code>, probabilities, confidence</td>
+        </tr>
+        <tr>
+          <td>Degree on ordered levels</td>
+          <td><code>Question.Score</code></td>
+          <td><code>score</code>, legend, probabilities, confidence</td>
+        </tr>
+        <tr>
+          <td>Is this true?</td>
+          <td><code>Question.Noul</code></td>
+          <td><code>noul</code> ∈ [0, 1] — no separate confidence</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Batch independent questions in one <code>SystemOneAsync</code> request. Retries, env vars, and errors match the JS SDK.</p>
+
+    <h2>Links</h2>
+    <ul>
+      <li><a href="https://docs.typesafe.ai/sdk">Client SDKs</a> · <a href="https://docs.typesafe.ai/sdk/javascript.md">JavaScript SDK</a> · <a href="https://docs.typesafe.ai/api.md">HTTP API</a></li>
+      <li><a href="https://docs.typesafe.ai/primitives.md">Primitives</a> · <a href="https://docs.typesafe.ai/concepts/state.md">State</a> · <a href="https://docs.typesafe.ai/confidence.md">Confidence</a></li>
+      <li><a href="https://github.com/hardkoded/typesafe-sdk-dotnet">hardkoded/typesafe-sdk-dotnet</a></li>
+    </ul>
+  </main>
+
+  <footer class="wrap">
+    MIT · Hardkoded · not affiliated with TypeSafe beyond being a client of the public API
+  </footer>
+</body>
+</html>
