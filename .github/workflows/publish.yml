@@ -4,6 +4,11 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      pack_ref:
+        description: "Optional git ref to pack (for example v0.1.0). Leave empty to pack this workflow's ref."
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -11,10 +16,16 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Dispatch from main with pack_ref=v0.1.0 to republish a tag without retagging
+          # (the tag itself still has the old workflow file).
+          ref: ${{ github.event.inputs.pack_ref || github.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -29,13 +40,12 @@ jobs:
       - name: Pack
         run: dotnet pack src/TypeSafe.AI.Sdk/TypeSafe.AI.Sdk.csproj -c Release -o artifacts
 
+      # nuget.org profile username (not email). Can switch to ${{ secrets.NUGET_USER }} later.
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: kblok
+
       - name: Push to nuget.org
-        if: github.event_name == 'push'
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: |
-          if [ -z "$NUGET_API_KEY" ]; then
-            echo "Repository secret NUGET_API_KEY is not set. Add a nuget.org API key as that secret."
-            exit 1
-          fi
-          dotnet nuget push artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
