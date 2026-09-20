@@ -38,7 +38,7 @@ Do not commit API keys or `.env` files.
 
 1. Merge to `main`.
 2. Tag `vMAJOR.MINOR.PATCH` (MinVer prefix `v`).
-3. Push the tag. `publish.yml` packs and pushes to nuget.org with the `NUGET_API_KEY` secret.
+3. Push the tag (or re-run **Publish NuGet** via `workflow_dispatch`). `publish.yml` packs and pushes to nuget.org with Trusted Publishing (OIDC). No long-lived API key is needed.
 
 ## GitHub Pages
 

@@ -106,10 +106,19 @@ Versioning is [MinVer](https://github.com/adamralph/minver) from git tags prefix
 ```bash
 git tag v0.1.0
 dotnet pack src/TypeSafe.AI.Sdk/TypeSafe.AI.Sdk.csproj -c Release -o artifacts
-dotnet nuget push artifacts/TypeSafe.AI.Sdk.*.nupkg -k "$NUGET_API_KEY" -s https://api.nuget.org/v3/index.json
 ```
 
-CI publishes on tags matching `v*` using the repository secret **`NUGET_API_KEY`** (a nuget.org API key). Do not commit keys.
+CI publishes on tags matching `v*` and on **workflow_dispatch** (so a failed push can be retried without retagging). Publishing uses [NuGet.org Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing) (GitHub OIDC). No long-lived nuget.org API key is needed.
+
+The nuget.org Trusted Publishing policy for this repo must list:
+
+| Field | Value |
+| --- | --- |
+| Repository Owner | `hardkoded` |
+| Repository | `typesafe-sdk-dotnet` |
+| Workflow File | `publish.yml` |
+
+Leave **Environment** empty unless the workflow is later bound to a GitHub Actions environment.
 
 Without a tag, packs are `0.1.0-preview.0` (or a later preview derived from height).
 
