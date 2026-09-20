@@ -19,16 +19,11 @@ public sealed class LiveApiTests
 
         var result = await client.SystemOneAsync(
             new { document = "I was charged twice. Please fix this ASAP." },
-            new Dictionary<string, Question>
-            {
-                ["billing"] = Question.Noul("Is this about billing?"),
-                ["category"] = Question.Choice("What is this ticket about?", new Dictionary<string, object?>
-                {
-                    ["billing"] = null,
-                    ["technical"] = null,
-                    ["other"] = null,
-                }),
-            });
+            ("billing", Question.Noul("Is this about billing?")),
+            ("category", Question.Choice("What is this ticket about?",
+                ("billing", null),
+                ("technical", null),
+                ("other", null))));
 
         Assert.False(string.IsNullOrWhiteSpace(result.Model));
         Assert.InRange(result.GetNoul("billing").Noul, 0, 1);

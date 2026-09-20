@@ -13,15 +13,14 @@ See [TypeSafe primitives](https://docs.typesafe.ai/primitives.md) for conceptual
 ## Choice
 
 ```csharp
-["category"] = Question.Choice(
+("category", Question.Choice(
     "What is this ticket about?",
-    new Dictionary<string, object?>
-    {
-        ["billing"] = null,
-        ["technical"] = "Product bugs, outages, or how-to",
-        ["other"] = null,
-    })
+    ("billing", null),
+    ("technical", "Product bugs, outages, or how-to"),
+    ("other", null)))
 ```
+
+Choice criteria is still a map on the wire. The tuple pairs are converted to that map; pass a `Dictionary<string, object?>` when you already have one. Duplicate labels throw.
 
 ```csharp
 var answer = response.GetChoice("category");
@@ -34,11 +33,11 @@ Console.WriteLine(answer.Confidence);
 Levels are ordered from low to high. Pass at least two level labels after the instructions.
 
 ```csharp
-["urgency"] = Question.Score(
+("urgency", Question.Score(
     "How urgent is this?",
     "not urgent",
     "soon",
-    "blocking")
+    "blocking"))
 ```
 
 ```csharp
@@ -52,7 +51,7 @@ Console.WriteLine(string.Join(" → ", answer.Legend));
 Probability that the statement is true.
 
 ```csharp
-["is_refund"] = Question.Noul("Is the customer asking for a refund?")
+("is_refund", Question.Noul("Is the customer asking for a refund?"))
 ```
 
 ```csharp
@@ -63,3 +62,16 @@ Console.WriteLine(answer.Noul);
 ## Batching
 
 Independent questions share one request. Prefer one `SystemOneAsync` call over many round trips when the questions do not depend on each other.
+
+```csharp
+var response = await client.SystemOneAsync(
+    state,
+    ("category", Question.Choice("What is this ticket about?",
+        ("billing", null),
+        ("technical", null),
+        ("other", null))),
+    ("urgency", Question.Score("How urgent is this?", "not urgent", "soon", "blocking")),
+    ("is_refund", Question.Noul("Is the customer asking for a refund?")));
+```
+
+For `model`, per-call options, or a cancellation token, pass `Question.Map(...)` to the dictionary overload (or set `SystemOneRequest.Questions`).

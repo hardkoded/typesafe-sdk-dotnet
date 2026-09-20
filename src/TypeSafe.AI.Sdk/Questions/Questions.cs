@@ -59,6 +59,23 @@ public abstract class Question
         Choice(instructions, (IReadOnlyDictionary<string, object?>)criteria);
 
     /// <summary>
+    /// Create a question that selects between named alternatives, from label/description pairs.
+    /// Duplicate labels throw. Pass a dictionary when you already have a map.
+    /// </summary>
+    public static ChoiceQuestion Choice(
+        object? instructions,
+        params (string Label, object? Description)[] criteria) =>
+        Choice(instructions, NamedMap(criteria, "choice label"));
+
+    /// <summary>
+    /// Build a name → question map from labeled pairs. Duplicate names throw.
+    /// Use this when you need a dictionary (for example <see cref="SystemOneRequest.Questions"/>,
+    /// or a <c>model</c> / cancellation token on the dictionary <c>SystemOneAsync</c> overload).
+    /// </summary>
+    public static Dictionary<string, Question> Map(params (string Name, Question Question)[] questions) =>
+        NamedMap(questions, "question");
+
+    /// <summary>
     /// Create a score question using an ordered rubric.
     /// Mirrors JS <c>score()</c>.
     /// </summary>
@@ -100,6 +117,34 @@ public abstract class Question
                     $"Score question \"{pair.Key}\" has {score.Criteria.Count} criteria; at least two scores are required.");
             }
         }
+    }
+
+    internal static Dictionary<string, TValue> NamedMap<TValue>(
+        (string Key, TValue Value)[]? pairs,
+        string itemKind)
+    {
+        if (pairs is null)
+        {
+            throw new TypeSafeException($"{itemKind} map must not be null.");
+        }
+
+        var map = new Dictionary<string, TValue>(pairs.Length);
+        foreach (var (key, value) in pairs)
+        {
+            if (key is null)
+            {
+                throw new TypeSafeException($"{itemKind} names must not be null.");
+            }
+
+            if (map.ContainsKey(key))
+            {
+                throw new TypeSafeException($"Duplicate {itemKind} \"{key}\".");
+            }
+
+            map[key] = value;
+        }
+
+        return map;
     }
 }
 

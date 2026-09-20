@@ -49,17 +49,13 @@ var result = await client.SystemOneAsync(
         ticket = new { subject = "Duplicate charge", body = "Charged twice. Refund ASAP." },
         policy = "Duplicate charges are refundable.",
     },
-    new Dictionary<string, Question>
-    {
-        ["refund"] = Question.Noul("Does `ticket.body` request a refund?"),
-        ["team"] = Question.Choice("Which team should handle `ticket`?", new Dictionary<string, object?>
-        {
-            ["billing"] = "Payments, invoicing, refunds",
-            ["technical"] = "Bugs and outages",
-            ["other"] = null,
-        }),
-        ["urgency"] = Question.Score("How urgent is `ticket`?", "can wait", "this week", "today"),
-    },
+    Question.Map(
+        ("refund", Question.Noul("Does `ticket.body` request a refund?")),
+        ("team", Question.Choice("Which team should handle `ticket`?",
+            ("billing", "Payments, invoicing, refunds"),
+            ("technical", "Bugs and outages"),
+            ("other", null))),
+        ("urgency", Question.Score("How urgent is `ticket`?", "can wait", "this week", "today"))),
     cancellationToken: cancellationToken);
 
 var refund = result.GetNoul("refund").Noul;

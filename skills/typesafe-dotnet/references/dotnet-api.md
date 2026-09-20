@@ -10,7 +10,8 @@ DI: `TypeSafe.AI.Sdk.DependencyInjection.AddTypeSafeClient`
   - `SystemOneAsync(SystemOneRequest | state+questions, RequestOptions?, CancellationToken)`
   - `SystemOneWithResponseAsync` → `TypeSafeResponse<T>` (`Data`, `Response`, `RequestId`)
   - `Models.ListAsync` / `ListWithResponseAsync`
-- `Question.Choice` / `Question.Score` / `Question.Noul`
+- `Question.Choice` / `Question.Score` / `Question.Noul` (Choice criteria: tuple pairs or a dictionary)
+- `Question.Map` — name/question pairs → `Dictionary<string, Question>`
 - `SystemOneResult.GetChoice` / `GetScore` / `GetNoul` / `Get<T>`
 - `RetryPolicy`, `RequestOptions`, `TypeSafeClientOptions`, `Env`, `SdkVersion`
 

@@ -163,6 +163,18 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         CancellationToken cancellationToken = default) =>
         SystemOneAsync(new SystemOneRequest { State = state, Questions = questions, Model = model }, options, cancellationToken);
 
+    /// <inheritdoc />
+    public Task<SystemOneResult> SystemOneAsync(
+        object? state,
+        params (string Name, Question Question)[] questions) =>
+        SystemOneAsync(state, Question.Map(questions));
+
+    /// <inheritdoc />
+    public Task<TypeSafeResponse<SystemOneResult>> SystemOneWithResponseAsync(
+        object? state,
+        params (string Name, Question Question)[] questions) =>
+        SystemOneWithResponseAsync(state, Question.Map(questions));
+
     internal async Task<T> SendAsync<T>(
         HttpMethod method,
         string path,
