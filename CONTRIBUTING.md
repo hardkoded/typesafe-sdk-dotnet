@@ -10,7 +10,7 @@ This repo is a community .NET port of [`typesafe-ai/typesafe-sdk-js`](https://gi
 | `tests/TypeSafe.AI.Sdk.Tests` | Unit tests (mocked HTTP) |
 | `tests/TypeSafe.AI.Sdk.IntegrationTests` | Live API; skip without `TYPESAFE_API_KEY` |
 | `samples/TypeSafe.AI.Sdk.Sample` | Console Choice + Noul |
-| `docs/` | GitHub Pages site |
+| `docs/` | DocFX docs site (GitHub Pages) |
 | `skills/typesafe-dotnet/` | Agent skill |
 | `.github/workflows/` | CI, NuGet publish, Pages |
 
@@ -40,6 +40,13 @@ Do not commit API keys or `.env` files.
 2. Tag `vMAJOR.MINOR.PATCH` (MinVer prefix `v`).
 3. Push the tag (or re-run **Publish NuGet** via `workflow_dispatch`). To republish an existing tag without retagging, dispatch from `main` with `pack_ref` set to that tag. `publish.yml` packs and pushes to nuget.org with Trusted Publishing (OIDC). No long-lived API key is needed.
 
-## GitHub Pages
+## GitHub Pages / DocFX
 
-`pages.yml` deploys `/docs` on pushes to `main`. In the repo: **Settings → Pages → Source: GitHub Actions**. The site URL is `https://hardkoded.github.io/typesafe-sdk-dotnet/`.
+`pages.yml` runs DocFX (`docs/docfx.json`) and deploys `docs/_site` on pushes to `main`. In the repo: **Settings → Pages → Source: GitHub Actions**. The site URL is `https://hardkoded.github.io/typesafe-sdk-dotnet/`.
+
+```bash
+dotnet tool update -g docfx
+docfx docs/docfx.json --serve
+```
+
+Conceptual articles live under `docs/articles/`. API reference is generated from XML docs on `src/TypeSafe.AI.Sdk`.

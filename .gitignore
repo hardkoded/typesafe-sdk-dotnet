@@ -46,3 +46,11 @@ coverage.xml
 *.coverage
 *.coveragexml
 .dotnet/
+
+## DocFX
+docs/_site/
+docs/api/.manifest
+docs/api/*.yml
+!docs/api/index.md
+docs/obj/
+log.txt

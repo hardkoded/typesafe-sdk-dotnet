@@ -1,0 +1,5 @@
+apiRules:
+  - exclude:
+      uidRegex: ^TypeSafe\.AI\.Sdk\.Internal(\.|$)
+  - exclude:
+      uidRegex: ^System\.Runtime\.CompilerServices

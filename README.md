@@ -129,7 +129,9 @@ dotnet run --project samples/TypeSafe.AI.Sdk.Sample
 
 - TypeSafe concepts and HTTP API: https://docs.typesafe.ai/sdk · https://docs.typesafe.ai/api.md
 - JavaScript SDK (parity source): https://github.com/typesafe-ai/typesafe-sdk-js
-- This port: [docs site](https://hardkoded.github.io/typesafe-sdk-dotnet/) · [CONTRIBUTING.md](CONTRIBUTING.md) · [agent skill](skills/typesafe-dotnet/SKILL.md)
+- This port: [docs site](https://hardkoded.github.io/typesafe-sdk-dotnet/) (DocFX) · [CONTRIBUTING.md](CONTRIBUTING.md) · [agent skill](skills/typesafe-dotnet/SKILL.md)
+
+Build the docs site locally with `dotnet tool update -g docfx && docfx docs/docfx.json --serve`.
 
 ## License
 
