@@ -16,7 +16,7 @@ This is **not** an official TypeSafe product and is not endorsed by TypeSafe. Be
 dotnet add package TypeSafe.AI.Sdk
 ```
 
-Targets `net10.0` (latest LTS), `net8.0`, and `netstandard2.0`. Requires the .NET 10 SDK to build (`global.json`).
+Targets `net10.0` (latest LTS) and `netstandard2.0`. Requires the .NET 10 SDK to build (`global.json`).
 
 ## Quickstart
 
