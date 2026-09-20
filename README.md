@@ -99,11 +99,11 @@ Exceptions mirror the JS hierarchy (`TypeSafeError` → `TypeSafeException`, and
 Versioning is [MinVer](https://github.com/adamralph/minver) from git tags prefixed with `v`:
 
 ```bash
-git tag v0.2.0
+git tag v0.3.0
 dotnet pack src/TypeSafe.AI.Sdk/TypeSafe.AI.Sdk.csproj -c Release -o artifacts
 ```
 
-Without a tag, packs are `0.2.0-preview.0` (or a later preview derived from height).
+Without a tag, packs are `0.3.0-preview.0` (or a later preview derived from height).
 
 ## Tests
 

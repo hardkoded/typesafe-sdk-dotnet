@@ -17,7 +17,7 @@ public static class SdkVersion
         if (string.IsNullOrWhiteSpace(informational))
         {
             var version = typeof(SdkVersion).Assembly.GetName().Version;
-            return version is null ? "0.2.0" : $"{version.Major}.{version.Minor}.{version.Build}";
+            return version is null ? "0.3.0" : $"{version.Major}.{version.Minor}.{version.Build}";
         }
 
         var value = informational!;
