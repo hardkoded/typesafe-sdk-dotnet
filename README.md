@@ -118,8 +118,6 @@ The nuget.org Trusted Publishing policy for this repo must list:
 | Repository | `typesafe-sdk-dotnet` |
 | Workflow File | `publish.yml` |
 
-Leave **Environment** empty unless the workflow is later bound to a GitHub Actions environment.
-
 Without a tag, packs are `0.1.0-preview.0` (or a later preview derived from height).
 
 ## Tests
