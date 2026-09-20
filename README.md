@@ -104,7 +104,6 @@ dotnet pack src/TypeSafe.AI.Sdk/TypeSafe.AI.Sdk.csproj -c Release -o artifacts
 ```
 
 Without a tag, packs are `0.3.0-preview.0` (or a later preview derived from height).
-
 ## Tests
 
 ```bash
