@@ -36,6 +36,12 @@ jobs:
       - name: Pack
         run: dotnet pack src/TypeSafe.AI.Sdk/TypeSafe.AI.Sdk.csproj --no-build -c Release -o artifacts
 
+      - name: Install DocFX
+        run: dotnet tool update -g docfx
+
+      - name: Build docs
+        run: docfx docs/docfx.json
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

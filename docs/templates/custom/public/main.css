@@ -1,0 +1,32 @@
+:root,
+[data-bs-theme="dark"] {
+  --bs-primary: #e3a008;
+  --bs-link-color: #e3a008;
+  --bs-link-hover-color: #f0bc3a;
+  --bs-body-bg: #11130f;
+  --bs-body-color: #f4f1e8;
+  --bs-border-color: #2c3026;
+  --bs-secondary-bg: #1a1d17;
+  --bs-tertiary-bg: #0d0f0b;
+  --bs-code-color: #f0bc3a;
+}
+
+[data-bs-theme="light"] {
+  --bs-primary: #b87d06;
+  --bs-link-color: #9a6a05;
+  --bs-link-hover-color: #b87d06;
+}
+
+.navbar {
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+article pre,
+article code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+footer {
+  color: #b7b39f;
+  font-size: 0.875rem;
+}
