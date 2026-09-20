@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       pack_ref:
-        description: "Optional git ref to pack (for example v0.2.0). Leave empty to pack this workflow's ref."
+        description: "Optional git ref to pack. Leave empty to pack this workflow's ref."
         required: false
         type: string
 
@@ -23,7 +23,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # Dispatch from main with pack_ref=v0.2.0 to republish a tag without retagging
           # (the tag itself still has the old workflow file).
           ref: ${{ github.event.inputs.pack_ref || github.ref }}
 
