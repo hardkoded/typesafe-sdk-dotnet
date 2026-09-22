@@ -1,3 +1,6 @@
+// Copyright (c) Dario Kondratiuk.
+// Licensed under the MIT License.
+
 using System.Text.Json;
 using Xunit;
 

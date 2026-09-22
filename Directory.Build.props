@@ -4,11 +4,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Run .editorconfig IDE/style rules during build. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
-    <Authors>Hardkoded</Authors>
-    <Company>Hardkoded</Company>
-    <Copyright>Copyright (c) Hardkoded</Copyright>
+    <Authors>Dario Kondratiuk</Authors>
+    <Company>Dario Kondratiuk</Company>
+    <Copyright>Copyright (c) Dario Kondratiuk.</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/hardkoded/typesafe-sdk-dotnet</PackageProjectUrl>
     <RepositoryUrl>https://github.com/hardkoded/typesafe-sdk-dotnet</RepositoryUrl>

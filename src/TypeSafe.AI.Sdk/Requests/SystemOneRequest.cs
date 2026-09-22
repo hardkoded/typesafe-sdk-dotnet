@@ -1,4 +1,5 @@
-using System.Text.Json;
+// Copyright (c) Dario Kondratiuk.
+// Licensed under the MIT License.
 
 namespace TypeSafe.AI.Sdk;
 

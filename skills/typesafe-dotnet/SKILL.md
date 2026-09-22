@@ -11,7 +11,7 @@ description: >
 
 # TypeSafe .NET SDK
 
-This skill is for **`TypeSafe.AI.Sdk`** (`dotnet add package TypeSafe.AI.Sdk`), a Hardkoded community port of [`@typesafe-ai/sdk`](https://github.com/typesafe-ai/typesafe-sdk-js). It is **not** an official TypeSafe product.
+This skill is for **`TypeSafe.AI.Sdk`** (`dotnet add package TypeSafe.AI.Sdk`), a community port of [`@typesafe-ai/sdk`](https://github.com/typesafe-ai/typesafe-sdk-js) by Dario Kondratiuk. It is **not** an official TypeSafe product.
 
 Live TypeSafe docs remain the source of truth for concepts. This skill covers the .NET client surface.
 

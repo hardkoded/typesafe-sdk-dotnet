@@ -1,3 +1,6 @@
+// Copyright (c) Dario Kondratiuk.
+// Licensed under the MIT License.
+
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -93,7 +96,11 @@ public class ApiException : TypeSafeException
         var raw = body as string ?? JsonSerializer.Serialize(body);
         if (raw.Length > MaxRawBodyInMessage)
         {
+#if NET
+            raw = string.Concat(raw.AsSpan(0, MaxRawBodyInMessage), "…");
+#else
             raw = raw.Substring(0, MaxRawBodyInMessage) + "…";
+#endif
         }
 
         return $"{status} {raw}";

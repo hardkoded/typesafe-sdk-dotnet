@@ -1,3 +1,6 @@
+// Copyright (c) Dario Kondratiuk.
+// Licensed under the MIT License.
+
 using System.Runtime.InteropServices;
 
 namespace TypeSafe.AI.Sdk;

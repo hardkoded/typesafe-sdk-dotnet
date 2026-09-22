@@ -1,3 +1,6 @@
+// Copyright (c) Dario Kondratiuk.
+// Licensed under the MIT License.
+
 using System.Globalization;
 using System.Net.Http.Headers;
 
@@ -78,17 +81,19 @@ public static class RetryCalculator
     public static Task SleepAsync(int milliseconds, CancellationToken cancellationToken = default) =>
         Task.Delay(milliseconds, cancellationToken);
 
-    private static readonly object RandomLock = new();
-    private static readonly Random RandomInstance = new();
+#if !NET6_0_OR_GREATER
+    private static readonly object s_randomLock = new();
+    private static readonly Random s_randomInstance = new();
+#endif
 
     private static double NextDouble()
     {
 #if NET6_0_OR_GREATER
         return Random.Shared.NextDouble();
 #else
-        lock (RandomLock)
+        lock (s_randomLock)
         {
-            return RandomInstance.NextDouble();
+            return s_randomInstance.NextDouble();
         }
 #endif
     }

@@ -1,3 +1,6 @@
+// Copyright (c) Dario Kondratiuk.
+// Licensed under the MIT License.
+
 namespace TypeSafe.AI.Sdk;
 
 /// <summary>Client for the TypeSafe AI API.</summary>
