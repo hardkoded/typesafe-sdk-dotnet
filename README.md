@@ -127,6 +127,3 @@ dotnet run --project samples/TypeSafe.AI.Sdk.Sample
 
 Build the docs site locally with `dotnet tool update -g docfx && docfx docs/docfx.json --serve`.
 
-## License
-
-MIT. Upstream JS SDK is also MIT.
