@@ -1,3 +1,6 @@
+// Copyright (c) Hardkoded.
+// Licensed under the MIT License.
+
 namespace TypeSafe.AI.Sdk;
 
 /// <summary>Access to the Models API resource.</summary>

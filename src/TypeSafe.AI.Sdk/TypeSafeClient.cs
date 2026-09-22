@@ -1,8 +1,10 @@
+// Copyright (c) Hardkoded.
+// Licensed under the MIT License.
+
 using System.Diagnostics;
-using System.Net;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace TypeSafe.AI.Sdk;
@@ -382,7 +384,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
 
         if (attempt > 0)
         {
-            headers["X-TypeSafe-Retry-Count"] = attempt.ToString();
+            headers["X-TypeSafe-Retry-Count"] = attempt.ToString(CultureInfo.InvariantCulture);
         }
 
         return headers;

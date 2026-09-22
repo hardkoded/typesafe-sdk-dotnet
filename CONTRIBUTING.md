@@ -25,6 +25,16 @@ dotnet test
 dotnet pack src/TypeSafe.AI.Sdk/TypeSafe.AI.Sdk.csproj -c Release -o artifacts
 ```
 
+### Code style
+
+Style is enforced at build time (same approach as [microsoft/aspire](https://github.com/microsoft/aspire)):
+
+- Root `.editorconfig` defines naming, IDE, and CA severities.
+- `Directory.Build.props` sets `EnforceCodeStyleInBuild`, `EnableNETAnalyzers`, and `TreatWarningsAsErrors`, so style warnings fail `dotnet build` / CI.
+- C# files use the MIT file header from `.editorconfig` (`IDE0073`).
+- Whitespace-only formatting (`IDE0055`) stays a suggestion and does not fail the build.
+- Tests and samples relax selected rules (see the `tests/**/*.cs` / `samples/**/*.cs` sections in `.editorconfig`).
+
 Do not commit API keys or `.env` files.
 
 ## Pull requests

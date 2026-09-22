@@ -1,3 +1,6 @@
+// Copyright (c) Hardkoded.
+// Licensed under the MIT License.
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -17,10 +20,14 @@ public static class TypeSafeServiceCollectionExtensions
         this IServiceCollection services,
         Action<TypeSafeClientOptions>? configure = null)
     {
+#if NET
+        ArgumentNullException.ThrowIfNull(services);
+#else
         if (services is null)
         {
             throw new ArgumentNullException(nameof(services));
         }
+#endif
 
         if (configure is not null)
         {

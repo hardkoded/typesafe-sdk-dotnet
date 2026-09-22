@@ -1,3 +1,6 @@
+// Copyright (c) Hardkoded.
+// Licensed under the MIT License.
+
 using System.Collections;
 using System.Text.Json;
 using System.Text.Json.Nodes;

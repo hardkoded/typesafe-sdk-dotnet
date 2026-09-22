@@ -1,3 +1,6 @@
+// Copyright (c) Hardkoded.
+// Licensed under the MIT License.
+
 namespace TypeSafe.AI.Sdk;
 
 /// <summary>Log verbosity; <see cref="Off"/> disables logging. Mirrors JS <c>LogLevel</c>.</summary>
@@ -82,21 +85,21 @@ public sealed class ConsoleTypeSafeLogger : ITypeSafeLogger
 
     /// <inheritdoc />
     public void Debug(string message, params object?[] args) =>
-        Console.Out.WriteLine(Format("debug", message, args));
+        Console.Out.WriteLine(Format(message, args));
 
     /// <inheritdoc />
     public void Info(string message, params object?[] args) =>
-        Console.Out.WriteLine(Format("info", message, args));
+        Console.Out.WriteLine(Format(message, args));
 
     /// <inheritdoc />
     public void Warn(string message, params object?[] args) =>
-        Console.Error.WriteLine(Format("warn", message, args));
+        Console.Error.WriteLine(Format(message, args));
 
     /// <inheritdoc />
     public void Error(string message, params object?[] args) =>
-        Console.Error.WriteLine(Format("error", message, args));
+        Console.Error.WriteLine(Format(message, args));
 
-    private static string Format(string level, string message, object?[] args)
+    private static string Format(string message, object?[] args)
     {
         if (args.Length == 0)
         {
@@ -122,7 +125,12 @@ public sealed class MicrosoftLoggingTypeSafeLogger : ITypeSafeLogger
     /// <summary>Create an adapter around a Microsoft logger.</summary>
     public MicrosoftLoggingTypeSafeLogger(Microsoft.Extensions.Logging.ILogger logger)
     {
+#if NET
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
+#else
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+#endif
     }
 
     /// <inheritdoc />
@@ -155,22 +163,34 @@ internal sealed class LevelFilteredLogger : ITypeSafeLogger
 
     public void Debug(string message, params object?[] args)
     {
-        if (_level <= TypeSafeLogLevel.Debug) _inner.Debug(message, args);
+        if (_level <= TypeSafeLogLevel.Debug)
+        {
+            _inner.Debug(message, args);
+        }
     }
 
     public void Info(string message, params object?[] args)
     {
-        if (_level <= TypeSafeLogLevel.Info) _inner.Info(message, args);
+        if (_level <= TypeSafeLogLevel.Info)
+        {
+            _inner.Info(message, args);
+        }
     }
 
     public void Warn(string message, params object?[] args)
     {
-        if (_level <= TypeSafeLogLevel.Warn) _inner.Warn(message, args);
+        if (_level <= TypeSafeLogLevel.Warn)
+        {
+            _inner.Warn(message, args);
+        }
     }
 
     public void Error(string message, params object?[] args)
     {
-        if (_level <= TypeSafeLogLevel.Error) _inner.Error(message, args);
+        if (_level <= TypeSafeLogLevel.Error)
+        {
+            _inner.Error(message, args);
+        }
     }
 }
 

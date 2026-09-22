@@ -1,15 +1,18 @@
+// Copyright (c) Hardkoded.
+// Licensed under the MIT License.
+
 namespace TypeSafe.AI.Sdk;
 
 internal static class HeaderRedactor
 {
-    private static readonly HashSet<string> KeyHeaders = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> s_keyHeaders = new(StringComparer.OrdinalIgnoreCase)
     {
         "authorization",
         "proxy-authorization",
         "x-api-key",
     };
 
-    private static readonly HashSet<string> OpaqueHeaders = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> s_opaqueHeaders = new(StringComparer.OrdinalIgnoreCase)
     {
         "cookie",
         "set-cookie",
@@ -28,12 +31,12 @@ internal static class HeaderRedactor
 
     private static string Redact(string name, string value)
     {
-        if (KeyHeaders.Contains(name))
+        if (s_keyHeaders.Contains(name))
         {
             return RedactKey(value);
         }
 
-        if (OpaqueHeaders.Contains(name))
+        if (s_opaqueHeaders.Contains(name))
         {
             return "***";
         }
@@ -48,11 +51,20 @@ internal static class HeaderRedactor
         var secret = value;
         if (space > 0)
         {
+#if NET
+            scheme = value[..space];
+            secret = value.AsSpan(space + 1).TrimStart().ToString();
+#else
             scheme = value.Substring(0, space);
             secret = value.Substring(space + 1).TrimStart();
+#endif
         }
 
+#if NET
+        var tail = secret.Length > 8 ? secret[^4..] : "";
+#else
         var tail = secret.Length > 8 ? secret.Substring(secret.Length - 4) : "";
+#endif
         return scheme is null ? $"***{tail}" : $"{scheme} ***{tail}";
     }
 }

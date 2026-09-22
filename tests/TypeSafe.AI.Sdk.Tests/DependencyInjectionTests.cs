@@ -1,3 +1,6 @@
+// Copyright (c) Hardkoded.
+// Licensed under the MIT License.
+
 using Microsoft.Extensions.DependencyInjection;
 using TypeSafe.AI.Sdk.DependencyInjection;
 using Xunit;

@@ -1,3 +1,6 @@
+// Copyright (c) Hardkoded.
+// Licensed under the MIT License.
+
 using System.Runtime.InteropServices;
 
 namespace TypeSafe.AI.Sdk;

@@ -1,4 +1,5 @@
-using System.Text.Json;
+// Copyright (c) Hardkoded.
+// Licensed under the MIT License.
 
 namespace TypeSafe.AI.Sdk;
 
