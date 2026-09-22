@@ -27,7 +27,7 @@ dotnet pack src/TypeSafe.AI.Sdk/TypeSafe.AI.Sdk.csproj -c Release -o artifacts
 
 ### Code style
 
-Style is enforced at build time (same approach as [microsoft/aspire](https://github.com/microsoft/aspire)):
+Style is enforced at build time:
 
 - Root `.editorconfig` defines naming, IDE, and CA severities.
 - `Directory.Build.props` sets `EnforceCodeStyleInBuild`, `EnableNETAnalyzers`, and `TreatWarningsAsErrors`, so style warnings fail `dotnet build` / CI.

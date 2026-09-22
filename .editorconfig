@@ -1,6 +1,6 @@
 ; EditorConfig for TypeSafe.AI.Sdk.
-; Style rules follow the microsoft/aspire approach: EditorConfig + EnforceCodeStyleInBuild
-; with TreatWarningsAsErrors so IDE/CA warnings fail the build.
+; Style rules via EditorConfig + EnforceCodeStyleInBuild with TreatWarningsAsErrors
+; so IDE/CA warnings fail the build.
 ;
 ; https://editorconfig.org/
 ; https://learn.microsoft.com/visualstudio/ide/editorconfig-code-style-settings-reference
@@ -348,7 +348,7 @@ dotnet_diagnostic.IDE0200.severity = warning
 dotnet_style_allow_multiple_blank_lines_experimental = false
 dotnet_diagnostic.IDE2000.severity = warning
 
-# Soften selected rules in tests and samples (mirrors Aspire's test/sample overrides).
+# Soften selected rules in tests and samples.
 # Use /**/*.cs so nested project folders match.
 [{tests/**/*.cs,samples/**/*.cs}]
 # IDE0005 requires GenerateDocumentationFile; keep it off in tests/samples.
