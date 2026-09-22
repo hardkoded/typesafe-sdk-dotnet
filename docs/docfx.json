@@ -39,7 +39,7 @@
     "globalMetadata": {
       "_appTitle": "TypeSafe.AI.Sdk",
       "_appName": "TypeSafe.AI.Sdk",
-      "_appFooter": "MIT · Hardkoded · not affiliated with TypeSafe beyond being a client of the public API",
+      "_appFooter": "MIT · Copyright (c) Dario Kondratiuk. · not affiliated with TypeSafe beyond being a client of the public API",
       "_enableSearch": true,
       "_enableNewTab": true,
       "_gitContribute": {

@@ -4,8 +4,8 @@
     <RootNamespace>TypeSafe.AI.Sdk</RootNamespace>
     <AssemblyName>TypeSafe.AI.Sdk</AssemblyName>
     <PackageId>TypeSafe.AI.Sdk</PackageId>
-    <Description>Community .NET client SDK for TypeSafe AI. Port of @typesafe-ai/sdk by Hardkoded — not an official TypeSafe product.</Description>
-    <PackageTags>typesafe;ai;sdk;jev;system-one;llm;hardkoded</PackageTags>
+    <Description>Community .NET client SDK for TypeSafe AI. Port of @typesafe-ai/sdk by Dario Kondratiuk — not an official TypeSafe product.</Description>
+    <PackageTags>typesafe;ai;sdk;jev;system-one;llm</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <IsPackable>true</IsPackable>

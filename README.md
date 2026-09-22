@@ -1,6 +1,6 @@
 # TypeSafe.AI.Sdk
 
-Community [.NET](https://dotnet.microsoft.com) client for [TypeSafe AI](https://typesafe.ai) — a Hardkoded port of [`@typesafe-ai/sdk`](https://github.com/typesafe-ai/typesafe-sdk-js).
+Community [.NET](https://dotnet.microsoft.com) client for [TypeSafe AI](https://typesafe.ai) — a port of [`@typesafe-ai/sdk`](https://github.com/typesafe-ai/typesafe-sdk-js) by Dario Kondratiuk.
 
 This is **not** an official TypeSafe product and is not endorsed by TypeSafe. Behavior is aligned with the JavaScript SDK and the [TypeSafe docs](https://docs.typesafe.ai/sdk).
 

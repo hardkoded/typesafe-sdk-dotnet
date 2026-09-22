@@ -1,11 +1,11 @@
 ---
 title: TypeSafe.AI.Sdk
-description: Community .NET client for TypeSafe AI by Hardkoded. Port of @typesafe-ai/sdk.
+description: Community .NET client for TypeSafe AI by Dario Kondratiuk. Port of @typesafe-ai/sdk.
 ---
 
 # TypeSafe.AI.Sdk
 
-Hardkoded community port of [`@typesafe-ai/sdk`](https://github.com/typesafe-ai/typesafe-sdk-js).
+Community port of [`@typesafe-ai/sdk`](https://github.com/typesafe-ai/typesafe-sdk-js) by Dario Kondratiuk.
 
 TypeSafe’s System One models (including Jev) turn application state into structured Choice, Score, and Noul answers your code can use directly. This package is a .NET port — **not** an official TypeSafe product.
 
