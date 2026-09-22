@@ -1,4 +1,4 @@
-// Copyright (c) Hardkoded.
+// Copyright (c) Dario Kondratiuk.
 // Licensed under the MIT License.
 
 using System.Diagnostics;
