@@ -45,6 +45,9 @@ That mirrors the [JavaScript quickstart](https://docs.typesafe.ai/sdk/javascript
 | Choice | `Question.Choice(instructions, criteria)` | `choice`, `probabilities`, `confidence` |
 | Score | `Question.Score(instructions, level0, level1, …)` | `score`, `legend`, `probabilities`, `confidence` |
 | Noul | `Question.Noul(instructions, criteria?)` | `noul` (P(yes), 0–1) |
+| Box | `Question.Box(instructions?)` | `box` (`top`/`bottom`/`left`/`right` fractions 0–1), `confidence` (`null` if omitted) |
+
+`box` locates something in an image ([docs](https://docs.typesafe.ai/images)). It is experimental: use model `jev-preview` and send header `TypeSafe-Danger-Zone-Images: true` (via `TypeSafeClientOptions.DefaultHeaders` or `RequestOptions.Headers`). Image bytes / `image()` / `withAssets` are a separate API; `Question.Box` can already be sent on JSON `systemone` requests.
 
 Batch independent questions in one `SystemOneAsync` call. See [primitives](https://docs.typesafe.ai/primitives.md).
 

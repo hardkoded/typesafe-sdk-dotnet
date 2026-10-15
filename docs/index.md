@@ -7,7 +7,7 @@ description: Community .NET client for TypeSafe AI by Dario Kondratiuk. Port of 
 
 Community port of [`@typesafe-ai/sdk`](https://github.com/typesafe-ai/typesafe-sdk-js) by Dario Kondratiuk.
 
-TypeSafe’s System One models (including Jev) turn application state into structured Choice, Score, and Noul answers your code can use directly. This package is a .NET port — **not** an official TypeSafe product.
+TypeSafe’s System One models (including Jev) turn application state into structured Choice, Score, Noul, and Box answers your code can use directly. This package is a .NET port — **not** an official TypeSafe product.
 
 ```bash
 dotnet add package TypeSafe.AI.Sdk
@@ -30,7 +30,7 @@ Console.WriteLine(response.GetChoice("category").Choice);
 ## Next steps
 
 - [Getting started](articles/getting-started.md) — install, env vars, first request
-- [Questions](articles/questions.md) — Choice, Score, and Noul
+- [Questions](articles/questions.md) — Choice, Score, Noul, and Box
 - [Configuration](articles/configuration.md) — options, retries, timeouts
 - [API reference](xref:TypeSafe.AI.Sdk) — generated from the library
 

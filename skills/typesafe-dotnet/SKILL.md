@@ -3,7 +3,7 @@ name: typesafe-dotnet
 license: MIT
 description: >
   Use the community TypeSafe.AI.Sdk .NET client to ask System One questions
-  (Choice, Score, Noul), batch them, handle retries and errors, and read
+  (Choice, Score, Noul, Box), batch them, handle retries and errors, and read
   probabilities/confidence. Use when adding TypeSafe judgments to a C# / .NET
   app, when porting JS/Python TypeSafe code, or when an agent needs the .NET
   API instead of HTTP or the official JS/Python SDKs.
@@ -27,10 +27,12 @@ Live TypeSafe docs remain the source of truth for concepts. This skill covers th
 | One of a closed set | Choice | `Question.Choice(instructions, criteria)` | `GetChoice(id).Choice`, `.Probabilities`, `.Confidence` |
 | Degree on ordered levels | Score | `Question.Score(instructions, level0, level1, …)` ≥ 2 levels | `GetScore(id).Score`, `.Legend`, `.Probabilities`, `.Confidence` |
 | Yes / no | Noul | `Question.Noul(instructions, criteria?)` | `GetNoul(id).Noul` in `[0, 1]` — **no** `Confidence` |
+| Where in an image | Box | `Question.Box(instructions?)` | `GetBox(id).Box` (`Top`/`Bottom`/`Left`/`Right` fractions 0–1), `.Confidence` (`double?`) |
 
 - Choice criteria is a **map** of label → description (`null` if the label is enough). Not a list.
 - Score criteria is an **ordered list** (index 0, 1, …). Not a map. The API accepts 2–10 levels.
 - Noul criteria is optional `{ true, false }` descriptions (`NoulCriteria` / `NoulCriteria.Yes` / `NoulCriteria.No`).
+- Box locates a subject in an image. Coordinates are fractions of height/width (0–1). `Confidence` is `null` when the API omits it. Experimental: use model `jev-preview` and send header `TypeSafe-Danger-Zone-Images: true` (`DefaultHeaders` or `RequestOptions.Headers`). See https://docs.typesafe.ai/images. Image bytes (`image()` / assets) are not in this SDK yet; `Question.Box` still serializes on JSON requests.
 - A Noul of `0.5` means yes and no are equally likely, **not** “medium intensity”. Use Score for a spectrum.
 - Question IDs are for your code only. Put the full meaning in `instructions`.
 - Ask every independent question over the same state in **one** `SystemOneAsync` call (speculative fan-out). A second request is only needed when the next state or option set depends on an earlier answer.

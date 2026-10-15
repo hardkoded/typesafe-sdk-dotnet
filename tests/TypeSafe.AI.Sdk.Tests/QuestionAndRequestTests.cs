@@ -153,6 +153,7 @@ public sealed class QuestionAndRequestTests
                 ["noCriteria"] = Question.Noul(null, null, includeCriteria: true),
                 ["choice"] = Question.Choice(null, new Dictionary<string, object?> { ["yes"] = null, ["no"] = null }),
                 ["score"] = Question.Score(null, new object?[] { null, "high" }),
+                ["box"] = Question.Box(),
             },
         });
 
@@ -164,6 +165,8 @@ public sealed class QuestionAndRequestTests
         Assert.Equal(JsonValueKind.Null, questions.GetProperty("choice").GetProperty("criteria").GetProperty("yes").ValueKind);
         Assert.Equal(JsonValueKind.Null, questions.GetProperty("score").GetProperty("criteria")[0].ValueKind);
         Assert.Equal("high", questions.GetProperty("score").GetProperty("criteria")[1].GetString());
+        Assert.Equal("box", questions.GetProperty("box").GetProperty("type").GetString());
+        Assert.Equal(JsonValueKind.Null, questions.GetProperty("box").GetProperty("instructions").ValueKind);
     }
 
     [Fact]
@@ -225,6 +228,122 @@ public sealed class QuestionAndRequestTests
         Assert.Equal("b", result.GetChoice("q").Choice);
         Assert.Equal(0.9, result.GetChoice("q").Confidence);
         Assert.Equal(0.1, result.GetChoice("q").Probabilities["a"]);
+    }
+
+    [Fact]
+    public void Box_defaults_its_instructions_to_null()
+    {
+        var withText = Question.Box("The dog");
+        Assert.Equal("box", withText.Type);
+        Assert.Equal("The dog", withText.Instructions);
+        Assert.True(withText.IncludeInstructions);
+
+        var omitted = Question.Box();
+        Assert.Equal("box", omitted.Type);
+        Assert.Null(omitted.Instructions);
+        Assert.True(omitted.IncludeInstructions);
+    }
+
+    [Fact]
+    public async Task Posts_box_question_with_instructions_on_the_wire()
+    {
+        var handler = ScriptedHandler.Json(new
+        {
+            model = "jev-preview",
+            answers = new
+            {
+                dog = new
+                {
+                    type = "box",
+                    box = new { top = 0.1, bottom = 0.6, left = 0.25, right = 0.75 },
+                    confidence = (double?)null,
+                },
+            },
+            usage = new { input_tokens = 1, output_tokens = 1 },
+        });
+        using var client = TestClient.Create(handler);
+        await client.SystemOneAsync(
+            "s",
+            new Dictionary<string, Question>
+            {
+                ["dog"] = Question.Box(new Dictionary<string, object?> { ["find"] = "the dog" }),
+            },
+            model: "jev-preview");
+
+        var question = handler.Requests[0].Body!.Value.GetProperty("questions").GetProperty("dog");
+        Assert.Equal("box", question.GetProperty("type").GetString());
+        Assert.Equal("the dog", question.GetProperty("instructions").GetProperty("find").GetString());
+        Assert.False(question.TryGetProperty("criteria", out _));
+        Assert.Equal("jev-preview", handler.Requests[0].Body!.Value.GetProperty("model").GetString());
+    }
+
+    [Fact]
+    public async Task Box_answers_carry_coordinates_and_nullable_confidence()
+    {
+        var handler = ScriptedHandler.Json(new
+        {
+            model = "m",
+            answers = new
+            {
+                dog = new
+                {
+                    type = "box",
+                    box = new { top = 0.1, bottom = 0.6, left = 0.25, right = 0.75 },
+                    confidence = (double?)null,
+                },
+                cat = new
+                {
+                    type = "box",
+                    box = new { top = 0.2, bottom = 0.8, left = 0.3, right = 0.9 },
+                    confidence = 0.87,
+                },
+                bird = new
+                {
+                    type = "box",
+                    box = new { top = 0, bottom = 1, left = 0, right = 1 },
+                },
+            },
+            usage = new { input_tokens = 1, output_tokens = 1 },
+        });
+        using var client = TestClient.Create(handler);
+        var result = await client.SystemOneAsync("s", new Dictionary<string, Question>
+        {
+            ["dog"] = Question.Box("The dog"),
+            ["cat"] = Question.Box("The cat"),
+            ["bird"] = Question.Box("The bird"),
+        });
+
+        var dog = result.GetBox("dog");
+        Assert.Equal("box", dog.Type);
+        Assert.Equal(0.1, dog.Box.Top);
+        Assert.Equal(0.6, dog.Box.Bottom);
+        Assert.Equal(0.25, dog.Box.Left);
+        Assert.Equal(0.75, dog.Box.Right);
+        Assert.Null(dog.Confidence);
+
+        var cat = result.GetBox("cat");
+        Assert.Equal(0.2, cat.Box.Top);
+        Assert.Equal(0.8, cat.Box.Bottom);
+        Assert.Equal(0.3, cat.Box.Left);
+        Assert.Equal(0.9, cat.Box.Right);
+        Assert.Equal(0.87, cat.Confidence);
+
+        Assert.Null(result.GetBox("bird").Confidence);
+    }
+
+    [Fact]
+    public async Task GetBox_rejects_a_mismatched_answer_type()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+        var result = await client.SystemOneAsync("s", new Dictionary<string, Question>
+        {
+            ["q1"] = Question.Noul("x"),
+        });
+
+        var ex = Assert.Throws<TypeSafeException>(() => result.GetBox("q1"));
+        Assert.Contains("Answer \"q1\" is noul, not BoxAnswer", ex.Message);
+        Assert.Equal(0.5, result.GetNoul("q1").Noul);
     }
 
     [Fact]

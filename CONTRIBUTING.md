@@ -39,7 +39,7 @@ Do not commit API keys or `.env` files.
 
 ## Pull requests
 
-- Keep public API close to the JS client: `TypeSafeClient`, `systemOne` → `SystemOneAsync`, `choice` / `score` / `noul`, retries, env vars, error mapping.
+- Keep public API close to the JS client: `TypeSafeClient`, `systemOne` → `SystemOneAsync`, `choice` / `score` / `noul` / `box`, retries, env vars, error mapping.
 - Use idiomatic .NET names (`Exception` suffix, `Async`, `CancellationToken`) and document the JS mapping.
 - Add or update unit tests for HTTP, retries, and errors. Integration tests stay gated on `TYPESAFE_API_KEY`.
 - XML-document new public APIs.
