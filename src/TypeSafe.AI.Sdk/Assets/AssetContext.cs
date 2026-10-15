@@ -69,7 +69,6 @@ internal sealed class AssetContext
 
             // An image under several names is written as the last one.
             _names[pair.Value] = pair.Key;
-            _known[pair.Value.ToString()] = pair.Value;
         }
     }
 
@@ -115,7 +114,7 @@ internal sealed class AssetContext
         // Names are matched as they appear in the JSON, with quotes and backslashes escaped.
         var json = payload.ToJsonString(s_relaxed);
         var unreferenced = _named.Keys
-            .Where(name => !json.Contains(JsonSerializer.Serialize(name, s_relaxed).Trim('"')))
+            .Where(name => !json.Contains(Unquoted(JsonSerializer.Serialize(name, s_relaxed))))
             .ToList();
         if (unreferenced.Count > 0)
         {
@@ -161,4 +160,6 @@ internal sealed class AssetContext
         // The API accepts each part for only one asset, so an image under several references is sent once per reference.
         return sent.Select((entry, index) => new AssetPart(entry.Alias, entry.Image, $"asset-{index}")).ToList();
     }
+
+    private static string Unquoted(string json) => json.Substring(1, json.Length - 2);
 }

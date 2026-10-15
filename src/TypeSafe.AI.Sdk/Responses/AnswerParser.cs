@@ -166,6 +166,11 @@ internal static class AnswerParser
         var parts = assets.Resolve(payload);
         if (parts.Count > 0)
         {
+            if (payload.ContainsKey("assets"))
+            {
+                throw new TypeSafeException("`assets` is reserved for images; remove it from `Extra`.");
+            }
+
             var entries = new JsonObject();
             foreach (var part in parts)
             {

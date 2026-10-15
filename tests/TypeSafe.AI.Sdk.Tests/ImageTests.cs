@@ -252,6 +252,23 @@ public sealed class ImageTests
     }
 
     [Fact]
+    public async Task Rejects_a_named_image_in_a_plain_interpolated_string()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+        var photo = new Image(s_pngBytes);
+
+        var ex = await Assert.ThrowsAsync<TypeSafeException>(() => client.SystemOneAsync(new SystemOneRequest
+        {
+            State = $"see {photo} and <photo>",
+            Questions = Ask(),
+            Assets = new Dictionary<string, Image> { ["<photo>"] = photo },
+        }));
+
+        Assert.Contains("Image references without an attached image", ex.Message);
+    }
+
+    [Fact]
     public async Task Resends_the_whole_multipart_body_on_retry()
     {
         var handler = ScriptedHandler.Sequence(
