@@ -30,5 +30,7 @@ var urgent = result.GetNoul("urgent");
 Console.WriteLine($"model:      {result.Model}");
 Console.WriteLine($"category:   {category.Choice} (confidence {category.Confidence:0.00})");
 Console.WriteLine($"urgent:     {urgent.Noul:0.00}");
-Console.WriteLine($"usage:      {result.Usage.InputTokens} in / {result.Usage.OutputTokens} out");
+Console.WriteLine($"usage:      {FormatTokens(result.Usage.InputTokens)} in / {FormatTokens(result.Usage.OutputTokens)} out");
 return 0;
+
+static string FormatTokens(int? tokens) => tokens?.ToString() ?? "null";

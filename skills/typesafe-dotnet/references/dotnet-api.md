@@ -13,6 +13,7 @@ DI: `TypeSafe.AI.Sdk.DependencyInjection.AddTypeSafeClient`
 - `Question.Choice` / `Question.Score` / `Question.Noul` (Choice criteria: tuple pairs or a dictionary)
 - `Question.Map` — name/question pairs → `Dictionary<string, Question>`
 - `SystemOneResult.GetChoice` / `GetScore` / `GetNoul` / `Get<T>`
+- `Usage.InputTokens` / `OutputTokens` (`int?` when the API did not report them)
 - `RetryPolicy`, `RequestOptions`, `TypeSafeClientOptions`, `Env`, `SdkVersion`
 
 ## Headers sent
