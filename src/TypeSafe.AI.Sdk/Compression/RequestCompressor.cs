@@ -64,13 +64,13 @@ internal static class RequestCompressor
     internal static byte[] Compress(byte[] body)
     {
         using var compressor = new Compressor();
-        return compressor.Wrap(body);
+        return compressor.Wrap(body).ToArray();
     }
 
     internal static byte[] Decompress(byte[] body)
     {
         using var decompressor = new Decompressor();
-        return decompressor.Unwrap(body);
+        return decompressor.Unwrap(body).ToArray();
     }
 
     private sealed class AvailabilityScope : IDisposable
