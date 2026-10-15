@@ -22,7 +22,13 @@ using var client = new TypeSafeClient(new TypeSafeClientOptions
 
 using var playwright = await Playwright.CreateAsync();
 await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = false });
-var page = await browser.NewPageAsync(new BrowserNewPageOptions { ViewportSize = new ViewportSize { Width = 1280, Height = 1000 } });
+var page = await browser.NewPageAsync(new BrowserNewPageOptions
+{
+    ViewportSize = new ViewportSize { Width = 1280, Height = 1000 },
+
+    // A card is about 126 CSS pixels wide. Doubling the pixel ratio gives the API a larger image to accept.
+    DeviceScaleFactor = 2,
+});
 
 var game = new MemoryGame(client, page);
 await game.PlayAsync();
