@@ -9,16 +9,6 @@ namespace TypeSafe.AI.Sdk;
 /// </summary>
 public sealed class RetryPolicy
 {
-    private int _maxRetries = 2;
-    private int _backoffInitialMs = 500;
-    private int _backoffMaxMs = 5000;
-    private double _backoffJitter = 0.25;
-    private ISet<int> _httpStatuses = DefaultHttpStatuses();
-    private bool _respectRetryAfter = true;
-    private int _maxRetryAfterMs = 60_000;
-    private bool _apiConnectionError = true;
-    private bool _apiTimeoutError = true;
-
     internal bool MaxRetriesSpecified { get; private set; }
     internal bool BackoffInitialMsSpecified { get; private set; }
     internal bool BackoffMaxMsSpecified { get; private set; }
@@ -32,101 +22,101 @@ public sealed class RetryPolicy
     /// <summary>Maximum retries after the initial attempt; <c>0</c> disables retries. Default: 2.</summary>
     public int MaxRetries
     {
-        get => _maxRetries;
+        get;
         set
         {
-            _maxRetries = value;
+            field = value;
             MaxRetriesSpecified = true;
         }
-    }
+    } = 2;
 
     /// <summary>First backoff delay in milliseconds, doubled up to <see cref="BackoffMaxMs"/>. Default: 500.</summary>
     public int BackoffInitialMs
     {
-        get => _backoffInitialMs;
+        get;
         set
         {
-            _backoffInitialMs = value;
+            field = value;
             BackoffInitialMsSpecified = true;
         }
-    }
+    } = 500;
 
     /// <summary>Maximum backoff delay in milliseconds. Default: 5000.</summary>
     public int BackoffMaxMs
     {
-        get => _backoffMaxMs;
+        get;
         set
         {
-            _backoffMaxMs = value;
+            field = value;
             BackoffMaxMsSpecified = true;
         }
-    }
+    } = 5000;
 
     /// <summary>Fraction of each backoff delay randomly subtracted, from 0 to 1. Default: 0.25.</summary>
     public double BackoffJitter
     {
-        get => _backoffJitter;
+        get;
         set
         {
-            _backoffJitter = value;
+            field = value;
             BackoffJitterSpecified = true;
         }
-    }
+    } = 0.25;
 
     /// <summary>HTTP status codes to retry. Default: 408, 429, and 500–599.</summary>
     public ISet<int> HttpStatuses
     {
-        get => _httpStatuses;
+        get;
         set
         {
-            _httpStatuses = value ?? throw new TypeSafeException("`retry.httpStatuses` must contain HTTP status codes, got null.");
+            field = value ?? throw new TypeSafeException("`retry.httpStatuses` must contain HTTP status codes, got null.");
             HttpStatusesSpecified = true;
         }
-    }
+    } = DefaultHttpStatuses();
 
     /// <summary>Honor <c>Retry-After</c> and <c>retry-after-ms</c> up to <see cref="MaxRetryAfterMs"/>. Default: true.</summary>
     public bool RespectRetryAfter
     {
-        get => _respectRetryAfter;
+        get;
         set
         {
-            _respectRetryAfter = value;
+            field = value;
             RespectRetryAfterSpecified = true;
         }
-    }
+    } = true;
 
     /// <summary>Maximum server retry delay in milliseconds; longer delays use backoff. Default: 60000.</summary>
     public int MaxRetryAfterMs
     {
-        get => _maxRetryAfterMs;
+        get;
         set
         {
-            _maxRetryAfterMs = value;
+            field = value;
             MaxRetryAfterMsSpecified = true;
         }
-    }
+    } = 60_000;
 
     /// <summary>Retry connection failures, including interrupted response bodies. Default: true.</summary>
     public bool ApiConnectionError
     {
-        get => _apiConnectionError;
+        get;
         set
         {
-            _apiConnectionError = value;
+            field = value;
             ApiConnectionErrorSpecified = true;
         }
-    }
+    } = true;
 
     /// <summary>Whether to retry <see cref="ApiTimeoutException"/>. Default: true.</summary>
     public bool ApiTimeoutError
     {
-        get => _apiTimeoutError;
+        get;
         set
         {
-            _apiTimeoutError = value;
+            field = value;
             ApiTimeoutErrorSpecified = true;
         }
-    }
+    } = true;
 
     /// <summary>SDK default retry policy (a new isolated copy).</summary>
     public static RetryPolicy Default => new();
@@ -135,15 +125,16 @@ public sealed class RetryPolicy
     public RetryPolicy Clone()
     {
         var clone = new RetryPolicy();
-        clone._maxRetries = _maxRetries;
-        clone._backoffInitialMs = _backoffInitialMs;
-        clone._backoffMaxMs = _backoffMaxMs;
-        clone._backoffJitter = _backoffJitter;
-        clone._httpStatuses = new HashSet<int>(_httpStatuses);
-        clone._respectRetryAfter = _respectRetryAfter;
-        clone._maxRetryAfterMs = _maxRetryAfterMs;
-        clone._apiConnectionError = _apiConnectionError;
-        clone._apiTimeoutError = _apiTimeoutError;
+        clone.MaxRetries = MaxRetries;
+        clone.BackoffInitialMs = BackoffInitialMs;
+        clone.BackoffMaxMs = BackoffMaxMs;
+        clone.BackoffJitter = BackoffJitter;
+        clone.HttpStatuses = new HashSet<int>(HttpStatuses);
+        clone.RespectRetryAfter = RespectRetryAfter;
+        clone.MaxRetryAfterMs = MaxRetryAfterMs;
+        clone.ApiConnectionError = ApiConnectionError;
+        clone.ApiTimeoutError = ApiTimeoutError;
+        clone.ClearSpecified();
         return clone;
     }
 
@@ -158,49 +149,50 @@ public sealed class RetryPolicy
 
         if (overrides.MaxRetriesSpecified)
         {
-            merged._maxRetries = Guards.NonNegativeInteger("retry.maxRetries", overrides.MaxRetries);
+            merged.MaxRetries = Guards.NonNegativeInteger("retry.maxRetries", overrides.MaxRetries);
         }
 
         if (overrides.BackoffInitialMsSpecified)
         {
-            merged._backoffInitialMs = Guards.NonNegativeMs("retry.backoffInitialMs", overrides.BackoffInitialMs);
+            merged.BackoffInitialMs = Guards.NonNegativeMs("retry.backoffInitialMs", overrides.BackoffInitialMs);
         }
 
         if (overrides.BackoffMaxMsSpecified)
         {
-            merged._backoffMaxMs = Guards.NonNegativeMs("retry.backoffMaxMs", overrides.BackoffMaxMs);
+            merged.BackoffMaxMs = Guards.NonNegativeMs("retry.backoffMaxMs", overrides.BackoffMaxMs);
         }
 
         if (overrides.BackoffJitterSpecified)
         {
-            merged._backoffJitter = Guards.Fraction("retry.backoffJitter", overrides.BackoffJitter);
+            merged.BackoffJitter = Guards.Fraction("retry.backoffJitter", overrides.BackoffJitter);
         }
 
         if (overrides.HttpStatusesSpecified)
         {
-            merged._httpStatuses = new HashSet<int>(Guards.StatusSet("retry.httpStatuses", overrides.HttpStatuses));
+            merged.HttpStatuses = new HashSet<int>(Guards.StatusSet("retry.httpStatuses", overrides.HttpStatuses));
         }
 
         if (overrides.RespectRetryAfterSpecified)
         {
-            merged._respectRetryAfter = overrides.RespectRetryAfter;
+            merged.RespectRetryAfter = overrides.RespectRetryAfter;
         }
 
         if (overrides.MaxRetryAfterMsSpecified)
         {
-            merged._maxRetryAfterMs = Guards.NonNegativeMs("retry.maxRetryAfterMs", overrides.MaxRetryAfterMs);
+            merged.MaxRetryAfterMs = Guards.NonNegativeMs("retry.maxRetryAfterMs", overrides.MaxRetryAfterMs);
         }
 
         if (overrides.ApiConnectionErrorSpecified)
         {
-            merged._apiConnectionError = overrides.ApiConnectionError;
+            merged.ApiConnectionError = overrides.ApiConnectionError;
         }
 
         if (overrides.ApiTimeoutErrorSpecified)
         {
-            merged._apiTimeoutError = overrides.ApiTimeoutError;
+            merged.ApiTimeoutError = overrides.ApiTimeoutError;
         }
 
+        merged.ClearSpecified();
         return merged;
     }
 
@@ -213,8 +205,23 @@ public sealed class RetryPolicy
         Guards.Fraction("retry.backoffJitter", BackoffJitter);
         Guards.StatusSet("retry.httpStatuses", HttpStatuses);
         Guards.NonNegativeMs("retry.maxRetryAfterMs", MaxRetryAfterMs);
-        _httpStatuses = new HashSet<int>(_httpStatuses);
+        var httpStatusesSpecified = HttpStatusesSpecified;
+        HttpStatuses = new HashSet<int>(HttpStatuses);
+        HttpStatusesSpecified = httpStatusesSpecified;
         return this;
+    }
+
+    private void ClearSpecified()
+    {
+        MaxRetriesSpecified = false;
+        BackoffInitialMsSpecified = false;
+        BackoffMaxMsSpecified = false;
+        BackoffJitterSpecified = false;
+        HttpStatusesSpecified = false;
+        RespectRetryAfterSpecified = false;
+        MaxRetryAfterMsSpecified = false;
+        ApiConnectionErrorSpecified = false;
+        ApiTimeoutErrorSpecified = false;
     }
 
     internal static ISet<int> DefaultHttpStatuses()

@@ -158,7 +158,7 @@ public class ApiException : TypeSafeException
 
     private static string? DescribeValidationErrors(JsonElement errors)
     {
-        var parts = new List<string>();
+        List<string> parts = [];
         foreach (var item in errors.EnumerateArray())
         {
             if (item.ValueKind != JsonValueKind.Object || !TryGetString(item, "msg", out var msg) || msg is null)
