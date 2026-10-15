@@ -4,6 +4,7 @@
 using System.Collections;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace TypeSafe.AI.Sdk;
 
@@ -13,14 +14,25 @@ internal static class JsonValues
     {
         PropertyNameCaseInsensitive = true,
         WriteIndented = false,
+        Converters = { new ImageConverter(), new TextWithAssetsConverter() },
     };
 
-    public static JsonNode? ToNode(object? value)
+    /// <summary>The assets of the request being serialized on this thread, for images inside POCOs and anonymous types.</summary>
+    [ThreadStatic]
+    private static AssetContext? s_assets;
+
+    internal static AssetContext WriteAssets() => s_assets ?? new AssetContext(null);
+
+    public static JsonNode? ToNode(object? value, AssetContext? assets = null)
     {
         switch (value)
         {
             case null:
                 return null;
+            case Image image:
+                return (assets ?? new AssetContext(null)).WriteImage(image);
+            case TextWithAssets text:
+                return (assets ?? new AssetContext(null)).WriteText(text);
             case JsonNode node:
                 return node.DeepClone();
             case JsonElement element:
@@ -40,7 +52,7 @@ internal static class JsonValues
                 var obj = new JsonObject();
                 foreach (var pair in map)
                 {
-                    obj[pair.Key] = ToNode(pair.Value);
+                    obj[pair.Key] = ToNode(pair.Value, assets);
                 }
 
                 return obj;
@@ -51,7 +63,7 @@ internal static class JsonValues
                 foreach (DictionaryEntry entry in map)
                 {
                     obj[Convert.ToString(entry.Key, System.Globalization.CultureInfo.InvariantCulture) ?? ""] =
-                        ToNode(entry.Value);
+                        ToNode(entry.Value, assets);
                 }
 
                 return obj;
@@ -61,13 +73,24 @@ internal static class JsonValues
                 var array = new JsonArray();
                 foreach (var item in enumerable)
                 {
-                    array.Add(ToNode(item));
+                    array.Add(ToNode(item, assets));
                 }
 
                 return array;
             }
             default:
-                return JsonSerializer.SerializeToNode(value, value.GetType(), SerializerOptions);
+            {
+                var previous = s_assets;
+                s_assets = assets;
+                try
+                {
+                    return JsonSerializer.SerializeToNode(value, value.GetType(), SerializerOptions);
+                }
+                finally
+                {
+                    s_assets = previous;
+                }
+            }
         }
     }
 
@@ -100,4 +123,22 @@ internal static class JsonValues
             return text;
         }
     }
+}
+
+internal sealed class ImageConverter : JsonConverter<Image>
+{
+    public override Image Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+        throw new NotSupportedException("Images are write-only.");
+
+    public override void Write(Utf8JsonWriter writer, Image value, JsonSerializerOptions options) =>
+        JsonValues.WriteAssets().WriteImage(value).WriteTo(writer);
+}
+
+internal sealed class TextWithAssetsConverter : JsonConverter<TextWithAssets>
+{
+    public override TextWithAssets Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+        throw new NotSupportedException("Text with assets is write-only.");
+
+    public override void Write(Utf8JsonWriter writer, TextWithAssets value, JsonSerializerOptions options) =>
+        JsonValues.WriteAssets().WriteText(value).WriteTo(writer);
 }

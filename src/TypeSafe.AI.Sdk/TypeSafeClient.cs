@@ -121,14 +121,15 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var payload = AnswerParser.BuildSystemOnePayload(request, DefaultModel);
+        var (payload, assets) = AnswerParser.BuildSystemOnePayload(request, DefaultModel);
         return await SendAsync(
             HttpMethod.Post,
             "/v1/systemone",
             payload,
             options,
             cancellationToken,
-            AnswerParser.ParseSystemOne).ConfigureAwait(false);
+            AnswerParser.ParseSystemOne,
+            assets).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -137,14 +138,15 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var payload = AnswerParser.BuildSystemOnePayload(request, DefaultModel);
+        var (payload, assets) = AnswerParser.BuildSystemOnePayload(request, DefaultModel);
         return SendWithResponseAsync(
             HttpMethod.Post,
             "/v1/systemone",
             payload,
             options,
             cancellationToken,
-            AnswerParser.ParseSystemOne);
+            AnswerParser.ParseSystemOne,
+            assets);
     }
 
     /// <summary>Answer named questions and return the HTTP response metadata.</summary>
@@ -183,9 +185,10 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         JsonNode? body,
         RequestOptions? options,
         CancellationToken cancellationToken,
-        Func<object?, T> parse)
+        Func<object?, T> parse,
+        IReadOnlyList<AssetPart>? assets = null)
     {
-        var result = await SendCoreAsync(method, path, body, options, cancellationToken, parse).ConfigureAwait(false);
+        var result = await SendCoreAsync(method, path, body, options, cancellationToken, parse, assets).ConfigureAwait(false);
         return result.Data;
     }
 
@@ -195,8 +198,9 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         JsonNode? body,
         RequestOptions? options,
         CancellationToken cancellationToken,
-        Func<object?, T> parse) =>
-        await SendCoreAsync(method, path, body, options, cancellationToken, parse).ConfigureAwait(false);
+        Func<object?, T> parse,
+        IReadOnlyList<AssetPart>? assets = null) =>
+        await SendCoreAsync(method, path, body, options, cancellationToken, parse, assets).ConfigureAwait(false);
 
     private async Task<TypeSafeResponse<T>> SendCoreAsync<T>(
         HttpMethod method,
@@ -204,7 +208,8 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         JsonNode? body,
         RequestOptions? options,
         CancellationToken cancellationToken,
-        Func<object?, T> parse)
+        Func<object?, T> parse,
+        IReadOnlyList<AssetPart>? assets)
     {
         options ??= new RequestOptions();
         var timeout = options.TimeoutMs is int perCall
@@ -231,7 +236,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             var retriesLeft = retry.MaxRetries - attempt;
             try
             {
-                var attemptResult = await AttemptAsync(tag, url, method, json, headers, attempt, timeout, token).ConfigureAwait(false);
+                var attemptResult = await AttemptAsync(tag, url, method, json, assets, headers, attempt, timeout, token).ConfigureAwait(false);
                 response = attemptResult.Response;
                 responseElapsedMs = attemptResult.ElapsedMs;
             }
@@ -282,6 +287,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         string url,
         HttpMethod method,
         string? json,
+        IReadOnlyList<AssetPart>? assets,
         IReadOnlyDictionary<string, string> userHeaders,
         int attempt,
         int timeout,
@@ -303,7 +309,9 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
 
         if (json is not null)
         {
-            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            request.Content = assets is { Count: > 0 }
+                ? BuildMultipart(json, assets)
+                : new StringContent(json, Encoding.UTF8, "application/json");
         }
 
         Logger.Debug($"{tag} -> {url}", new
@@ -339,6 +347,24 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             Logger.Info($"{tag} connection error after {started.ElapsedMilliseconds}ms", ex);
             throw new ApiConnectionException($"Connection error: {ex.Message}", ex);
         }
+    }
+
+    /// <summary>A <c>multipart/form-data</c> body whose first part, <c>request</c>, is the JSON payload, followed by each image's file bytes.</summary>
+    private static MultipartFormDataContent BuildMultipart(string json, IReadOnlyList<AssetPart> assets)
+    {
+        var boundary = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+        var form = new MultipartFormDataContent(boundary);
+        // HttpClient quotes the boundary by default; send it bare, as browsers do.
+        form.Headers.ContentType = MediaTypeHeaderValue.Parse($"multipart/form-data; boundary={boundary}");
+        form.Add(new StringContent(json, Encoding.UTF8, "application/json"), "request");
+        foreach (var asset in assets)
+        {
+            var content = new ByteArrayContent(asset.Image.Bytes);
+            content.Headers.ContentType = new MediaTypeHeaderValue(asset.ContentType);
+            form.Add(content, asset.Name, asset.Name);
+        }
+
+        return form;
     }
 
     private async Task BackOffAsync(

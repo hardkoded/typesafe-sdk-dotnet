@@ -48,6 +48,35 @@ That mirrors the [JavaScript quickstart](https://docs.typesafe.ai/sdk/javascript
 
 Batch independent questions in one `SystemOneAsync` call. See [primitives](https://docs.typesafe.ai/primitives.md).
 
+## Images
+
+Image support is experimental. Opt in by sending the `TypeSafe-Danger-Zone-Images: true` header (`DefaultHeaders` on the client, or `RequestOptions.Headers` for one call). Images must be PNG or JPEG. Create one with `new Image(bytes)`, `Image.FromFile(path)`, or `Image.FromBase64(text)`, then use it in any of three ways:
+
+```csharp
+var photo = Image.FromFile("returns/RMA-1042.jpg");
+var catalog = Image.FromFile("catalog/mug.png");
+
+// 1. Place it in the state, question instructions, or criteria.
+await client.SystemOneAsync(
+    new { claim = "The mug arrived with a chipped rim.", photo },
+    ("damaged", Question.Noul("Is the product in the photo damaged?")));
+
+// 2. Write it into text with TextWithAssets.From (and TextWithAssets.Join for lists).
+await client.SystemOneAsync(
+    TextWithAssets.From($"The customer sent {photo}. The catalog photo is {catalog}."),
+    ("same", Question.Noul(TextWithAssets.From($"Does {photo} show {catalog}?"))));
+
+// 3. Choose your own references with SystemOneRequest.Assets.
+await client.SystemOneAsync(new SystemOneRequest
+{
+    State = "The customer sent <photo>.",
+    Questions = Question.Map(("damaged", Question.Noul("Is <photo> damaged?"))),
+    Assets = new Dictionary<string, Image> { ["<photo>"] = photo },
+});
+```
+
+Requests with images are sent as `multipart/form-data`. An image in a plain interpolated string, or a name in `Assets` that the request never uses, throws a `TypeSafeException` before sending. See [Images](docs/articles/images.md).
+
 ## Configuration
 
 Explicit options win, then environment variables, then SDK defaults (same as JS).
