@@ -14,6 +14,7 @@ internal sealed class RecordedRequest
     public required string Url { get; init; }
     public required string Method { get; init; }
     public required string? BodyText { get; init; }
+    public byte[]? BodyBytes { get; init; }
     public JsonElement? Body { get; init; }
     public Dictionary<string, string> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
 }
@@ -108,7 +109,8 @@ internal sealed class ScriptedHandler : HttpMessageHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var bodyText = request.Content is null ? null : await request.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var bodyBytes = request.Content is null ? null : await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        var bodyText = bodyBytes is null ? null : Encoding.UTF8.GetString(bodyBytes);
         JsonElement? body = null;
         if (!string.IsNullOrEmpty(bodyText))
         {
@@ -128,6 +130,7 @@ internal sealed class ScriptedHandler : HttpMessageHandler
             Url = request.RequestUri?.ToString() ?? "",
             Method = request.Method.Method,
             BodyText = bodyText,
+            BodyBytes = bodyBytes,
             Body = body,
         };
         foreach (var header in request.Headers)

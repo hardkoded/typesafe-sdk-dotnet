@@ -17,7 +17,7 @@ DI: `TypeSafe.AI.Sdk.DependencyInjection.AddTypeSafeClient`
 
 ## Headers sent
 
-`Authorization: Bearer …`, `Accept: application/json`, `User-Agent` / `X-TypeSafe-SDK: typesafe-sdk-dotnet/{version}`, `X-TypeSafe-Runtime: dotnet/{version} ({os}; {arch})`, `X-TypeSafe-Retry-Count` on retries.
+`Authorization: Bearer …`, `Accept: application/json`, `User-Agent` / `X-TypeSafe-SDK: typesafe-sdk-dotnet/{version}`, `X-TypeSafe-Runtime: dotnet/{version} ({os}; {arch})`, `X-TypeSafe-Retry-Count` on retries, `Content-Encoding: zstd` on bodies of 1 KiB or more (disable with `Compression = false`).
 
 ## Endpoints
 

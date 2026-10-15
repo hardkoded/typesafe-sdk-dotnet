@@ -4,7 +4,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json.Nodes;
 
 namespace TypeSafe.AI.Sdk;
@@ -50,6 +49,9 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
     /// <summary>Additional headers sent with each request.</summary>
     public IReadOnlyDictionary<string, string> DefaultHeaders => _defaultHeaders;
 
+    /// <summary>Whether request bodies of 1 KiB or more are compressed with zstd.</summary>
+    public bool Compression { get; }
+
     /// <inheritdoc />
     public ModelsResource Models { get; }
 
@@ -94,6 +96,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         Logger = new LevelFilteredLogger(options.Logger ?? new ConsoleTypeSafeLogger(), LogLevel);
         Retry = RetryPolicy.Resolve(RetryPolicy.Default, options.Retry).Validate();
         TimeoutMs = Guards.PositiveMs("timeout", options.TimeoutMs ?? RetryCalculator.DefaultTimeoutMs);
+        Compression = options.Compression;
         _defaultHeaders = options.DefaultHeaders is null
             ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             : new Dictionary<string, string>(options.DefaultHeaders, StringComparer.OrdinalIgnoreCase);
@@ -222,6 +225,8 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         var tag = $"#{Interlocked.Increment(ref _requestCount)} {method.Method} {path}";
         var url = BaseUrl + path;
         var json = body?.ToJsonString(JsonValues.SerializerOptions);
+        // Compressed once and sent as-is on every attempt.
+        var (bytes, compressed) = json is null ? (null, false) : BodyCompression.Encode(json, Compression);
 
         HttpResponseMessage? response = null;
         object? parsedBody = null;
@@ -231,7 +236,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             var retriesLeft = retry.MaxRetries - attempt;
             try
             {
-                var attemptResult = await AttemptAsync(tag, url, method, json, headers, attempt, timeout, token).ConfigureAwait(false);
+                var attemptResult = await AttemptAsync(tag, url, method, json, bytes, compressed, headers, attempt, timeout, token).ConfigureAwait(false);
                 response = attemptResult.Response;
                 responseElapsedMs = attemptResult.ElapsedMs;
             }
@@ -282,6 +287,8 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         string url,
         HttpMethod method,
         string? json,
+        byte[]? bytes,
+        bool compressed,
         IReadOnlyDictionary<string, string> userHeaders,
         int attempt,
         int timeout,
@@ -291,9 +298,10 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         attemptCts.CancelAfter(timeout);
 
         using var request = new HttpRequestMessage(method, url);
-        foreach (var header in BuildHeaders(userHeaders, json is not null, attempt))
+        foreach (var header in BuildHeaders(userHeaders, json is not null, compressed, attempt))
         {
-            if (header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
+            if (header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase)
+                || header.Key.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -301,14 +309,19 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             request.Headers.TryAddWithoutValidation(header.Key, header.Value);
         }
 
-        if (json is not null)
+        if (bytes is not null)
         {
-            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            request.Content = new ByteArrayContent(bytes);
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
+            if (compressed)
+            {
+                request.Content.Headers.ContentEncoding.Add(BodyCompression.ContentEncoding);
+            }
         }
 
         Logger.Debug($"{tag} -> {url}", new
         {
-            headers = HeaderRedactor.Redact(BuildHeaders(userHeaders, json is not null, attempt)),
+            headers = HeaderRedactor.Redact(BuildHeaders(userHeaders, json is not null, compressed, attempt)),
             body = json is null ? null : JsonNode.Parse(json),
         });
 
@@ -363,7 +376,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         }
     }
 
-    private Dictionary<string, string> BuildHeaders(IReadOnlyDictionary<string, string> userHeaders, bool hasBody, int attempt)
+    private Dictionary<string, string> BuildHeaders(IReadOnlyDictionary<string, string> userHeaders, bool hasBody, bool compressed, int attempt)
     {
         var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in userHeaders)
@@ -371,7 +384,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             headers[pair.Key] = pair.Value;
         }
 
-        // User-supplied headers go first so they can't clobber auth or the JSON content type.
+        // User-supplied headers go first so they can't clobber auth, the content type, or the encoding.
         headers["Authorization"] = $"Bearer {_apiKey}";
         headers["Accept"] = "application/json";
         headers["User-Agent"] = $"typesafe-sdk-dotnet/{SdkVersion.Current}";
@@ -380,6 +393,11 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         if (hasBody)
         {
             headers["Content-Type"] = "application/json";
+        }
+
+        if (compressed)
+        {
+            headers["Content-Encoding"] = BodyCompression.ContentEncoding;
         }
 
         if (attempt > 0)
