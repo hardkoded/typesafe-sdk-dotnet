@@ -25,8 +25,8 @@ internal static class AnswerParser
         {
             usage = new Usage
             {
-                InputTokens = ReadInt(usageNode, "input_tokens"),
-                OutputTokens = ReadInt(usageNode, "output_tokens"),
+                InputTokens = ReadNullableInt(usageNode, "input_tokens"),
+                OutputTokens = ReadNullableInt(usageNode, "output_tokens"),
             };
         }
 
@@ -156,10 +156,10 @@ internal static class AnswerParser
         return map;
     }
 
-    private static int ReadInt(JsonElement node, string name) =>
-        node.TryGetProperty(name, out var property) && property.ValueKind == JsonValueKind.Number
-            ? property.GetInt32()
-            : 0;
+    private static int? ReadNullableInt(JsonElement node, string name) =>
+        node.TryGetProperty(name, out var property) && property.ValueKind == JsonValueKind.Number && property.TryGetInt32(out var value)
+            ? value
+            : null;
 
     private static JsonElement AsObject(object? body, string endpoint)
     {

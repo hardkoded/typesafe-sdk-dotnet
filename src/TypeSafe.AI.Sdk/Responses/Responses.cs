@@ -9,13 +9,13 @@ namespace TypeSafe.AI.Sdk;
 /// <summary>Token usage for a request.</summary>
 public sealed class Usage
 {
-    /// <summary>Number of input tokens used.</summary>
+    /// <summary>Number of input tokens used, or <c>null</c> when the API does not report it.</summary>
     [JsonPropertyName("input_tokens")]
-    public int InputTokens { get; init; }
+    public int? InputTokens { get; init; }
 
-    /// <summary>Number of output tokens used.</summary>
+    /// <summary>Number of output tokens used, or <c>null</c> when the API does not report it.</summary>
     [JsonPropertyName("output_tokens")]
-    public int OutputTokens { get; init; }
+    public int? OutputTokens { get; init; }
 }
 
 /// <summary>Metadata for an available model.</summary>

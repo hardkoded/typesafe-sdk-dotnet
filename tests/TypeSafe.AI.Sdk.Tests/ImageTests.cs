@@ -318,7 +318,10 @@ public sealed class ImageTests
             var boundary = "--" + contentType["multipart/form-data; boundary=".Length..];
 
             // Latin-1 maps every byte to one char, so offsets in the text are offsets in the bytes.
-            var raw = Encoding.Latin1.GetString(request.BodyBytes!);
+            var bytes = request.Headers.GetValueOrDefault("Content-Encoding") == "zstd"
+                ? Decompress(request.BodyBytes!)
+                : request.BodyBytes!;
+            var raw = Encoding.Latin1.GetString(bytes);
             var parts = new List<Part>();
             foreach (var chunk in raw.Split(boundary).Skip(1))
             {
@@ -336,6 +339,12 @@ public sealed class ImageTests
             }
 
             return parts;
+        }
+
+        private static byte[] Decompress(byte[] bytes)
+        {
+            using var decompressor = new ZstdSharp.Decompressor();
+            return decompressor.Unwrap(bytes).ToArray();
         }
     }
 }

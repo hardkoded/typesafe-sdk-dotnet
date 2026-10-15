@@ -10,6 +10,7 @@ Explicit options win, then environment variables, then SDK defaults — same pre
 | `LogLevel` | `TYPESAFE_LOG_LEVEL` | `warn` |
 | `TimeoutMs` | — | `10000` per attempt |
 | `Retry` | — | 2 retries, 500–5000ms backoff, 25% jitter |
+| `Compression` | — | `true` |
 
 ## Client options
 
@@ -27,6 +28,10 @@ See <xref:TypeSafe.AI.Sdk.TypeSafeClientOptions> and <xref:TypeSafe.AI.Sdk.Retry
 ## Retries
 
 Retryable HTTP statuses: 408, 429, 500–599. Connection errors and timeouts retry by default. `Retry-After` / `retry-after-ms` are honored up to 60 seconds. Timeout is **per attempt** — there is no total retry budget.
+
+## Compression
+
+Request bodies of 1 KiB or more are compressed with zstd and sent with `Content-Encoding: zstd`. Smaller bodies are sent as-is. Set `Compression = false` to send every body uncompressed, for example to an API that doesn't accept compressed requests.
 
 ## Per-call overrides
 
