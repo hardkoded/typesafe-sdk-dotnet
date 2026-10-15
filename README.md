@@ -60,8 +60,11 @@ Explicit options win, then environment variables, then SDK defaults (same as JS)
 | `LogLevel` | `TYPESAFE_LOG_LEVEL` | `warn` |
 | `TimeoutMs` | — | `10000` per attempt |
 | `Retry` | — | 2 retries, 500–5000ms backoff, 25% jitter |
+| `Compression` | — | `true` |
 
 Retryable HTTP statuses: 408, 429, 500–599. Connection errors and timeouts retry by default. `Retry-After` / `retry-after-ms` are honored up to 60s.
+
+Request bodies of 1 KiB or more are compressed with zstd and sent with `Content-Encoding: zstd`. Smaller bodies fit in one TCP segment, so they are sent as-is. Set `Compression = false` to send every body uncompressed, for example to an API that doesn't accept compressed requests.
 
 ```csharp
 using var client = new TypeSafeClient(new TypeSafeClientOptions

@@ -69,6 +69,12 @@ public sealed class TypeSafeClientOptions
     /// <summary>Timeout per attempt in milliseconds, without a total retry budget. Default: 10000.</summary>
     public int? TimeoutMs { get; set; }
 
+    /// <summary>
+    /// Compress request bodies of 1 KiB or more with zstd. Default: <c>true</c>.
+    /// Set to <c>false</c> to send all bodies uncompressed, for example to an API that doesn't accept compressed requests.
+    /// </summary>
+    public bool Compression { get; set; } = true;
+
     /// <summary>Additional request headers; per-call headers take precedence.</summary>
     public IDictionary<string, string>? DefaultHeaders { get; set; }
 
