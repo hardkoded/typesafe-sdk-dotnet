@@ -53,8 +53,22 @@ public sealed class Image
     }
 
     /// <summary>Create an image from the bytes of a file, read now.</summary>
-    /// <exception cref="TypeSafeException">The file is empty.</exception>
-    public static Image FromFile(string path) => new(File.ReadAllBytes(path));
+    /// <exception cref="TypeSafeException">The file is empty or can't be read.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is null or empty.</exception>
+    public static Image FromFile(string path)
+    {
+        byte[] bytes;
+        try
+        {
+            bytes = File.ReadAllBytes(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or System.Security.SecurityException)
+        {
+            throw new TypeSafeException($"Image file \"{path}\" could not be read: {ex.Message}", ex);
+        }
+
+        return new Image(bytes);
+    }
 
     /// <summary>The unique reference this image is sent under, for referencing it inside text.</summary>
     public override string ToString() => _reference;

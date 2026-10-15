@@ -23,6 +23,20 @@ internal static class JsonValues
 
     internal static AssetContext WriteAssets() => s_assets ?? new AssetContext(null);
 
+    private static JsonNode? SerializeWithAssets(object value, AssetContext? assets)
+    {
+        var previous = s_assets;
+        s_assets = assets;
+        try
+        {
+            return JsonSerializer.SerializeToNode(value, value.GetType(), SerializerOptions);
+        }
+        finally
+        {
+            s_assets = previous;
+        }
+    }
+
     public static JsonNode? ToNode(object? value, AssetContext? assets = null)
     {
         switch (value)
@@ -48,49 +62,38 @@ internal static class JsonValues
             case float or double or decimal:
                 return JsonSerializer.SerializeToNode(value, SerializerOptions);
             case IDictionary<string, object?> map:
-            {
-                var obj = new JsonObject();
-                foreach (var pair in map)
                 {
-                    obj[pair.Key] = ToNode(pair.Value, assets);
-                }
+                    var obj = new JsonObject();
+                    foreach (var pair in map)
+                    {
+                        obj[pair.Key] = ToNode(pair.Value, assets);
+                    }
 
-                return obj;
-            }
+                    return obj;
+                }
             case IDictionary map:
-            {
-                var obj = new JsonObject();
-                foreach (DictionaryEntry entry in map)
                 {
-                    obj[Convert.ToString(entry.Key, System.Globalization.CultureInfo.InvariantCulture) ?? ""] =
-                        ToNode(entry.Value, assets);
-                }
+                    var obj = new JsonObject();
+                    foreach (DictionaryEntry entry in map)
+                    {
+                        obj[Convert.ToString(entry.Key, System.Globalization.CultureInfo.InvariantCulture) ?? ""] =
+                            ToNode(entry.Value, assets);
+                    }
 
-                return obj;
-            }
+                    return obj;
+                }
             case IEnumerable enumerable when value is not string:
-            {
-                var array = new JsonArray();
-                foreach (var item in enumerable)
                 {
-                    array.Add(ToNode(item, assets));
-                }
+                    var array = new JsonArray();
+                    foreach (var item in enumerable)
+                    {
+                        array.Add(ToNode(item, assets));
+                    }
 
-                return array;
-            }
+                    return array;
+                }
             default:
-            {
-                var previous = s_assets;
-                s_assets = assets;
-                try
-                {
-                    return JsonSerializer.SerializeToNode(value, value.GetType(), SerializerOptions);
-                }
-                finally
-                {
-                    s_assets = previous;
-                }
-            }
+                return SerializeWithAssets(value, assets);
         }
     }
 
