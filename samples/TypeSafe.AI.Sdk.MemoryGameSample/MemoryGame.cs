@@ -30,6 +30,7 @@ internal sealed class MemoryGame(ITypeSafeClient client, IPage page)
     {
         await page.GotoAsync(GameUrl);
         await page.ClickAsync("#start");
+        await page.Locator("#cards").EvaluateAsync("board => board.scrollIntoView({ block: 'center' })");
         var cardCount = await page.Locator(".card").CountAsync();
         (int, int)? pending = null;
 
