@@ -14,10 +14,11 @@ DI: `TypeSafe.AI.Sdk.DependencyInjection.AddTypeSafeClient`
 - `Question.Map` — name/question pairs → `Dictionary<string, Question>`
 - `SystemOneResult.GetChoice` / `GetScore` / `GetNoul` / `Get<T>`
 - `RetryPolicy`, `RequestOptions`, `TypeSafeClientOptions`, `Env`, `SdkVersion`
+- `RequestCompression` (`Auto`, `None`, `Zstd`) — `TypeSafeClientOptions.Compression` / `TypeSafeClient.Compression`
 
 ## Headers sent
 
-`Authorization: Bearer …`, `Accept: application/json`, `User-Agent` / `X-TypeSafe-SDK: typesafe-sdk-dotnet/{version}`, `X-TypeSafe-Runtime: dotnet/{version} ({os}; {arch})`, `X-TypeSafe-Retry-Count` on retries.
+`Authorization: Bearer …`, `Accept: application/json`, `User-Agent` / `X-TypeSafe-SDK: typesafe-sdk-dotnet/{version}`, `X-TypeSafe-Runtime: dotnet/{version} ({os}; {arch})`, `X-TypeSafe-Retry-Count` on retries. JSON bodies of 1 KiB or more also send `Content-Encoding: zstd` unless `Compression` is `None`.
 
 ## Endpoints
 

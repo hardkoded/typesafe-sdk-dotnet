@@ -78,6 +78,8 @@ Environment (empty/whitespace ignored; constructor wins):
 
 Retry defaults match JS: `MaxRetries = 2`, `BackoffInitialMs = 500`, `BackoffMaxMs = 5000`, `BackoffJitter = 0.25`, statuses 408/429/5xx, honor `Retry-After` up to 60s, retry connection errors and timeouts. Timeout is **per attempt** (default 10s), not a total budget.
 
+Request bodies of 1 KiB or more are compressed with zstd (`Content-Encoding: zstd`) via ZstdSharp.Port on both `net10.0` and `netstandard2.0`. Smaller bodies stay uncompressed. Set `TypeSafeClientOptions.Compression = RequestCompression.None` to opt out (`compression: false` in JS). Explicit `RequestCompression.Zstd` throws if zstd is unavailable.
+
 ```csharp
 services.AddTypeSafeClient(o => o.TimeoutMs = 20_000);
 // ITypeSafeClient from DI; named HttpClient: TypeSafeClient.HttpClientName

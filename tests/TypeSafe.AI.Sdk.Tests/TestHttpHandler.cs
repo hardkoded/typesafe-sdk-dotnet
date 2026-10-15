@@ -14,6 +14,7 @@ internal sealed class RecordedRequest
     public required string Url { get; init; }
     public required string Method { get; init; }
     public required string? BodyText { get; init; }
+    public byte[]? BodyBytes { get; init; }
     public JsonElement? Body { get; init; }
     public Dictionary<string, string> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
 }
@@ -108,7 +109,10 @@ internal sealed class ScriptedHandler : HttpMessageHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var bodyText = request.Content is null ? null : await request.Content.ReadAsStringAsync().ConfigureAwait(false);
+        byte[]? bodyBytes = request.Content is null
+            ? null
+            : await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        var bodyText = bodyBytes is null ? null : Encoding.UTF8.GetString(bodyBytes);
         JsonElement? body = null;
         if (!string.IsNullOrEmpty(bodyText))
         {
@@ -118,7 +122,7 @@ internal sealed class ScriptedHandler : HttpMessageHandler
             }
             catch (JsonException)
             {
-                // leave null
+                // leave null (binary compressed bodies are not JSON text)
             }
         }
 
@@ -128,6 +132,7 @@ internal sealed class ScriptedHandler : HttpMessageHandler
             Url = request.RequestUri?.ToString() ?? "",
             Method = request.Method.Method,
             BodyText = bodyText,
+            BodyBytes = bodyBytes,
             Body = body,
         };
         foreach (var header in request.Headers)
@@ -191,14 +196,31 @@ internal static class TestClient
 internal sealed class RecordingLogger : ITypeSafeLogger
 {
     public List<string> Lines { get; } = new();
+    public List<(string Message, object?[] Args)> Entries { get; } = new();
 
-    public void Debug(string message, params object?[] args) => Lines.Add("debug " + message);
+    public void Debug(string message, params object?[] args)
+    {
+        Lines.Add("debug " + message);
+        Entries.Add((message, args));
+    }
 
-    public void Info(string message, params object?[] args) => Lines.Add(message);
+    public void Info(string message, params object?[] args)
+    {
+        Lines.Add(message);
+        Entries.Add((message, args));
+    }
 
-    public void Warn(string message, params object?[] args) => Lines.Add("warn " + message);
+    public void Warn(string message, params object?[] args)
+    {
+        Lines.Add("warn " + message);
+        Entries.Add((message, args));
+    }
 
-    public void Error(string message, params object?[] args) => Lines.Add("error " + message);
+    public void Error(string message, params object?[] args)
+    {
+        Lines.Add("error " + message);
+        Entries.Add((message, args));
+    }
 }
 
 internal static class Fixtures

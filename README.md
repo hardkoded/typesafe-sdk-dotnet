@@ -60,6 +60,7 @@ Explicit options win, then environment variables, then SDK defaults (same as JS)
 | `LogLevel` | `TYPESAFE_LOG_LEVEL` | `warn` |
 | `TimeoutMs` | — | `10000` per attempt |
 | `Retry` | — | 2 retries, 500–5000ms backoff, 25% jitter |
+| `Compression` | — | `Auto` (zstd when available; bodies under 1 KiB stay uncompressed) |
 
 Retryable HTTP statuses: 408, 429, 500–599. Connection errors and timeouts retry by default. `Retry-After` / `retry-after-ms` are honored up to 60s.
 
@@ -84,6 +85,24 @@ public sealed class Tickets(ITypeSafeClient typesafe) { /* ... */ }
 ```
 
 Uses `IHttpClientFactory` and the named client `TypeSafe.AI`.
+
+## Request compression
+
+The client compresses request bodies of 1 KiB or more with zstd, which reduces upload size and
+time, especially for large states. Smaller bodies fit in a single TCP segment, so they are sent
+uncompressed. zstd is provided by [ZstdSharp.Port](https://www.nuget.org/packages/ZstdSharp.Port)
+on both `net10.0` and `netstandard2.0` (the BCL has no zstd APIs until .NET 11). Pass
+`Compression = RequestCompression.None` to send all bodies uncompressed, for example to an API
+that doesn't accept compressed requests:
+
+```csharp
+using var client = new TypeSafeClient(new TypeSafeClientOptions
+{
+    Compression = RequestCompression.None,
+});
+```
+
+Explicit `Compression = RequestCompression.Zstd` throws `TypeSafeException` if zstd is unavailable.
 
 ## Errors
 

@@ -24,6 +24,7 @@ public sealed class ClientConfigurationTests
         Assert.True(client.Retry.HttpStatuses.Contains(429));
         Assert.True(client.Retry.HttpStatuses.Contains(529));
         Assert.Equal(10_000, client.TimeoutMs);
+        Assert.Equal(RequestCompression.Zstd, client.Compression);
     }
 
     [Fact]
