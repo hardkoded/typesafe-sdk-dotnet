@@ -148,6 +148,14 @@ export TYPESAFE_API_KEY=tsk_...
 dotnet run --project samples/TypeSafe.AI.Sdk.Sample
 ```
 
+`samples/TypeSafe.AI.Sdk.MemoryGameSample` uses [images](docs/articles/images.md) to play the [cats-and-kittens memory game](https://www.memozor.com/memory-games/for-seniors-or-elderly/cats-and-kittens). It drives a browser with Playwright, screenshots each card it flips, and asks TypeSafe whether two cards show the same picture. It needs a browser once:
+
+```bash
+dotnet build samples/TypeSafe.AI.Sdk.MemoryGameSample
+pwsh samples/TypeSafe.AI.Sdk.MemoryGameSample/bin/Debug/net10.0/playwright.ps1 install chromium
+dotnet run --project samples/TypeSafe.AI.Sdk.MemoryGameSample
+```
+
 ## Documentation
 
 - TypeSafe concepts and HTTP API: https://docs.typesafe.ai/sdk · https://docs.typesafe.ai/api.md
