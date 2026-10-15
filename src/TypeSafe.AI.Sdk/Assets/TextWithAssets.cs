@@ -40,11 +40,15 @@ public sealed class TextWithAssets
     public static TextWithAssets Join(IEnumerable<object?> values, string separator = ",")
     {
         var list = values.ToList();
-        return Create(string.Join(separator, list.Select(value => value?.ToString())), list);
+        return Create(string.Join(separator, list.Select(Stringify)), list);
     }
 
     /// <inheritdoc />
     public override string ToString() => Text;
+
+    /// <summary>A value as text; a nested sequence is joined with commas, so the images in it are written too.</summary>
+    private static string? Stringify(object? value) =>
+        value is IEnumerable items and not string ? string.Join(",", items.Cast<object?>().Select(Stringify)) : value?.ToString();
 
     private static TextWithAssets Create(string text, IReadOnlyList<object?> values)
     {

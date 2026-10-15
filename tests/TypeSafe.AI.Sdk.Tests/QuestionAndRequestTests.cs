@@ -277,6 +277,38 @@ public sealed class QuestionAndRequestTests
     }
 
     [Fact]
+    public async Task Usage_allows_null_or_missing_token_counts()
+    {
+        var handler = ScriptedHandler.Json(new
+        {
+            model = "m",
+            answers = new { q = new { type = "noul", noul = 0.5 } },
+            usage = new { input_tokens = (int?)null, output_tokens = 7 },
+        });
+        using var client = TestClient.Create(handler);
+        var result = await client.SystemOneAsync("s", new Dictionary<string, Question>
+        {
+            ["q"] = Question.Noul("?"),
+        });
+        Assert.Null(result.Usage.InputTokens);
+        Assert.Equal(7, result.Usage.OutputTokens);
+
+        var missing = ScriptedHandler.Json(new
+        {
+            model = "m",
+            answers = new { q = new { type = "noul", noul = 0.5 } },
+            usage = new { },
+        });
+        using var missingClient = TestClient.Create(missing);
+        var missingResult = await missingClient.SystemOneAsync("s", new Dictionary<string, Question>
+        {
+            ["q"] = Question.Noul("?"),
+        });
+        Assert.Null(missingResult.Usage.InputTokens);
+        Assert.Null(missingResult.Usage.OutputTokens);
+    }
+
+    [Fact]
     public async Task Forwards_extra_fields_and_null()
     {
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);

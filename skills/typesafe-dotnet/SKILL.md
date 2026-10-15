@@ -97,7 +97,7 @@ Every public async method takes `CancellationToken`. Cancel → `ApiUserAbortExc
 | `ApiConnectionException` | `APIConnectionError` | transport failure |
 | `ApiUserAbortException` | `APIUserAbortError` | caller cancel |
 
-Do not invent request/response fields. Usage is `input_tokens` / `output_tokens` (`Usage.InputTokens` / `OutputTokens`). Models: `client.Models.ListAsync()`.
+Do not invent request/response fields. Usage is `input_tokens` / `output_tokens` (`Usage.InputTokens` / `OutputTokens`, both `int?` and `null` when the API reports no count). Models: `client.Models.ListAsync()`.
 
 ## Agent habits
 

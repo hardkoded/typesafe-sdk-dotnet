@@ -50,6 +50,9 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
     /// <summary>Additional headers sent with each request.</summary>
     public IReadOnlyDictionary<string, string> DefaultHeaders => _defaultHeaders;
 
+    /// <summary>Whether request bodies of 1 KiB or more are compressed with zstd.</summary>
+    public bool Compression { get; }
+
     /// <inheritdoc />
     public ModelsResource Models { get; }
 
@@ -94,6 +97,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         Logger = new LevelFilteredLogger(options.Logger ?? new ConsoleTypeSafeLogger(), LogLevel);
         Retry = RetryPolicy.Resolve(RetryPolicy.Default, options.Retry).Validate();
         TimeoutMs = Guards.PositiveMs("timeout", options.TimeoutMs ?? RetryCalculator.DefaultTimeoutMs);
+        Compression = options.Compression;
         _defaultHeaders = options.DefaultHeaders is null
             ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             : new Dictionary<string, string>(options.DefaultHeaders, StringComparer.OrdinalIgnoreCase);
@@ -227,6 +231,8 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         var tag = $"#{Interlocked.Increment(ref _requestCount)} {method.Method} {path}";
         var url = BaseUrl + path;
         var json = body?.ToJsonString(JsonValues.SerializerOptions);
+        // Encoded (and compressed) once and sent as-is on every attempt.
+        var encoded = json is null ? null : await EncodeBodyAsync(json, assets).ConfigureAwait(false);
 
         HttpResponseMessage? response = null;
         object? parsedBody = null;
@@ -236,7 +242,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             var retriesLeft = retry.MaxRetries - attempt;
             try
             {
-                var attemptResult = await AttemptAsync(tag, url, method, json, assets, headers, attempt, timeout, token).ConfigureAwait(false);
+                var attemptResult = await AttemptAsync(tag, url, method, json, encoded, headers, attempt, timeout, token).ConfigureAwait(false);
                 response = attemptResult.Response;
                 responseElapsedMs = attemptResult.ElapsedMs;
             }
@@ -287,7 +293,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         string url,
         HttpMethod method,
         string? json,
-        IReadOnlyList<AssetPart>? assets,
+        EncodedBody? body,
         IReadOnlyDictionary<string, string> userHeaders,
         int attempt,
         int timeout,
@@ -297,9 +303,10 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         attemptCts.CancelAfter(timeout);
 
         using var request = new HttpRequestMessage(method, url);
-        foreach (var header in BuildHeaders(userHeaders, json is not null, attempt))
+        foreach (var header in BuildHeaders(userHeaders, body, attempt))
         {
-            if (header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
+            if (header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase)
+                || header.Key.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -307,16 +314,19 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             request.Headers.TryAddWithoutValidation(header.Key, header.Value);
         }
 
-        if (json is not null)
+        if (body is not null)
         {
-            request.Content = assets is { Count: > 0 }
-                ? BuildMultipart(json, assets)
-                : new StringContent(json, Encoding.UTF8, "application/json");
+            request.Content = new ByteArrayContent(body.Bytes);
+            request.Content.Headers.ContentType = body.ContentType;
+            if (body.Compressed)
+            {
+                request.Content.Headers.ContentEncoding.Add(BodyCompression.ContentEncoding);
+            }
         }
 
         Logger.Debug($"{tag} -> {url}", new
         {
-            headers = HeaderRedactor.Redact(BuildHeaders(userHeaders, json is not null, attempt)),
+            headers = HeaderRedactor.Redact(BuildHeaders(userHeaders, body, attempt)),
             body = json is null ? null : JsonNode.Parse(json),
         });
 
@@ -348,6 +358,24 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             throw new ApiConnectionException($"Connection error: {ex.Message}", ex);
         }
     }
+
+    /// <summary>The JSON body, or the multipart body when images are attached, compressed when enabled and large enough.</summary>
+    private async Task<EncodedBody> EncodeBodyAsync(string json, IReadOnlyList<AssetPart>? assets)
+    {
+        if (assets is not { Count: > 0 })
+        {
+            var (jsonBytes, jsonCompressed) = BodyCompression.Encode(json, Compression);
+            return new EncodedBody(jsonBytes, jsonCompressed, new MediaTypeHeaderValue("application/json") { CharSet = "utf-8" });
+        }
+
+        // Like the JS SDK, the whole multipart body is compressed, not just its JSON part.
+        using var form = BuildMultipart(json, assets);
+        var formBytes = await form.ReadAsByteArrayAsync().ConfigureAwait(false);
+        var (bytes, compressed) = BodyCompression.Encode(formBytes, Compression);
+        return new EncodedBody(bytes, compressed, form.Headers.ContentType!);
+    }
+
+    private sealed record EncodedBody(byte[] Bytes, bool Compressed, MediaTypeHeaderValue ContentType);
 
     /// <summary>A <c>multipart/form-data</c> body whose first part, <c>request</c>, is the JSON payload, followed by each image's file bytes.</summary>
     private static MultipartFormDataContent BuildMultipart(string json, IReadOnlyList<AssetPart> assets)
@@ -389,7 +417,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         }
     }
 
-    private Dictionary<string, string> BuildHeaders(IReadOnlyDictionary<string, string> userHeaders, bool hasBody, int attempt)
+    private Dictionary<string, string> BuildHeaders(IReadOnlyDictionary<string, string> userHeaders, EncodedBody? body, int attempt)
     {
         var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in userHeaders)
@@ -397,15 +425,20 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             headers[pair.Key] = pair.Value;
         }
 
-        // User-supplied headers go first so they can't clobber auth or the JSON content type.
+        // User-supplied headers go first so they can't clobber auth, the content type, or the encoding.
         headers["Authorization"] = $"Bearer {_apiKey}";
         headers["Accept"] = "application/json";
         headers["User-Agent"] = $"typesafe-sdk-dotnet/{SdkVersion.Current}";
         headers["X-TypeSafe-SDK"] = $"typesafe-sdk-dotnet/{SdkVersion.Current}";
         headers["X-TypeSafe-Runtime"] = RuntimeInfo.Description;
-        if (hasBody)
+        if (body is not null)
         {
-            headers["Content-Type"] = "application/json";
+            headers["Content-Type"] = body.ContentType.ToString();
+        }
+
+        if (body is { Compressed: true })
+        {
+            headers["Content-Encoding"] = BodyCompression.ContentEncoding;
         }
 
         if (attempt > 0)

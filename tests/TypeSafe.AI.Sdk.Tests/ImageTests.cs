@@ -161,6 +161,74 @@ public sealed class ImageTests
     }
 
     [Fact]
+    public void FromFile_reads_the_file_and_reports_failures_as_TypeSafeException()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllBytes(path, s_pngBytes);
+            Assert.Equal(s_pngBytes, Image.FromFile(path).Data.ToArray());
+
+            File.WriteAllBytes(path, Array.Empty<byte>());
+            Assert.Contains("empty", Assert.Throws<TypeSafeException>(() => Image.FromFile(path)).Message);
+
+            File.Delete(path);
+            var missing = Assert.Throws<TypeSafeException>(() => Image.FromFile(path));
+            Assert.IsType<FileNotFoundException>(missing.InnerException);
+            Assert.Contains(path, missing.Message);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task Large_multipart_bodies_are_compressed_whole()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+        var big = new Image(s_pngBytes.Concat(new byte[5000]).ToArray());
+
+        await client.SystemOneAsync(big, Ask());
+
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal("zstd", request.Headers["Content-Encoding"]);
+        Assert.StartsWith("multipart/form-data; boundary=", request.Headers["Content-Type"]);
+        var form = Multipart.Parse(request);
+        Assert.Equal(new[] { "request", "asset-0" }, form.Select(p => p.Name));
+        Assert.Equal(big.Data.ToArray(), form[1].Bytes);
+    }
+
+    [Fact]
+    public async Task Compressed_multipart_bodies_are_resent_unchanged_on_retry()
+    {
+        var calls = 0;
+        var handler = new ScriptedHandler((_, _) => ++calls == 1
+            ? ScriptedHandler.JsonResponse(new { }, HttpStatusCode.ServiceUnavailable)
+            : ScriptedHandler.JsonResponse(Fixtures.SystemOne));
+        using var client = TestClient.Create(handler);
+
+        await client.SystemOneAsync(new Image(s_pngBytes.Concat(new byte[5000]).ToArray()), Ask());
+
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal(handler.Requests[0].BodyBytes, handler.Requests[1].BodyBytes);
+        Assert.Equal(handler.Requests[0].Headers["Content-Type"], handler.Requests[1].Headers["Content-Type"]);
+    }
+
+    [Fact]
+    public void Join_writes_the_images_of_nested_sequences()
+    {
+        var one = new Image(s_pngBytes);
+        var two = new Image(s_jpegBytes);
+
+        var list = TextWithAssets.Join(new object[] { new[] { one, two }, "end" }, "; ");
+
+        Assert.Equal($"{one},{two}; end", list.Text);
+        Assert.Equal(2, list.Assets.Count);
+    }
+
+    [Fact]
     public async Task WithAssets_Join_and_nesting_carry_their_images()
     {
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);
@@ -318,7 +386,10 @@ public sealed class ImageTests
             var boundary = "--" + contentType["multipart/form-data; boundary=".Length..];
 
             // Latin-1 maps every byte to one char, so offsets in the text are offsets in the bytes.
-            var raw = Encoding.Latin1.GetString(request.BodyBytes!);
+            var bytes = request.Headers.GetValueOrDefault("Content-Encoding") == "zstd"
+                ? Decompress(request.BodyBytes!)
+                : request.BodyBytes!;
+            var raw = Encoding.Latin1.GetString(bytes);
             var parts = new List<Part>();
             foreach (var chunk in raw.Split(boundary).Skip(1))
             {
@@ -336,6 +407,12 @@ public sealed class ImageTests
             }
 
             return parts;
+        }
+
+        private static byte[] Decompress(byte[] bytes)
+        {
+            using var decompressor = new ZstdSharp.Decompressor();
+            return decompressor.Unwrap(bytes).ToArray();
         }
     }
 }

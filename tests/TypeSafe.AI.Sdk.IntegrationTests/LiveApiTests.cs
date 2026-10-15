@@ -31,6 +31,7 @@ public sealed class LiveApiTests
         Assert.False(string.IsNullOrWhiteSpace(result.Model));
         Assert.InRange(result.GetNoul("billing").Noul, 0, 1);
         Assert.Contains(result.GetChoice("category").Choice, new[] { "billing", "technical", "other" });
+        Assert.NotNull(result.Usage.InputTokens);
         Assert.True(result.Usage.InputTokens > 0);
     }
 
