@@ -38,6 +38,28 @@ public sealed class ImageTests
     }
 
     [Fact]
+    public async Task Box_question_with_an_image_state_is_sent_as_multipart()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+        var photo = new Image(s_pngBytes);
+
+        await client.SystemOneAsync(new SystemOneRequest
+        {
+            State = photo,
+            Questions = Question.Map(("damage", Question.Box("The damaged area"))),
+            Model = "jev-preview",
+        });
+
+        var form = Multipart.Parse(handler.Requests[0]);
+        Assert.Equal(new[] { "request", "asset-0" }, form.Select(p => p.Name));
+        var json = JsonDocument.Parse(form[0].Text).RootElement;
+        Assert.Equal("jev-preview", json.GetProperty("model").GetString());
+        Assert.Equal(photo.ToString(), json.GetProperty("state").GetString());
+        Assert.Equal("box", json.GetProperty("questions").GetProperty("damage").GetProperty("type").GetString());
+    }
+
+    [Fact]
     public async Task Image_in_state_is_sent_as_multipart_under_its_reference()
     {
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);

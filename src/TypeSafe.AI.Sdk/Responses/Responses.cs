@@ -37,7 +37,7 @@ public sealed class ModelCard
 /// <summary>Base type for a typed System One answer.</summary>
 public abstract class Answer
 {
-    /// <summary>Answer type matching the question: <c>noul</c>, <c>choice</c>, or <c>score</c>.</summary>
+    /// <summary>Answer type matching the question: <c>noul</c>, <c>choice</c>, <c>score</c>, or <c>box</c>.</summary>
     public abstract string Type { get; }
 }
 
@@ -89,6 +89,35 @@ public sealed class ScoreAnswer : Answer
         new Dictionary<string, double>();
 }
 
+/// <summary>A box's edges as fractions of the image's height (top, bottom) and width (left, right).</summary>
+public sealed class BoxCoordinates
+{
+    /// <summary>Top edge, as a fraction of image height from the top, from zero to one.</summary>
+    public double Top { get; init; }
+
+    /// <summary>Bottom edge, as a fraction of image height from the top, from zero to one.</summary>
+    public double Bottom { get; init; }
+
+    /// <summary>Left edge, as a fraction of image width from the left, from zero to one.</summary>
+    public double Left { get; init; }
+
+    /// <summary>Right edge, as a fraction of image width from the left, from zero to one.</summary>
+    public double Right { get; init; }
+}
+
+/// <summary>The location of what a box question describes in the image.</summary>
+public sealed class BoxAnswer : Answer
+{
+    /// <inheritdoc />
+    public override string Type => "box";
+
+    /// <summary>Where the instructions' subject is in the image.</summary>
+    public BoxCoordinates Box { get; init; } = new();
+
+    /// <summary>Confidence in the box, from zero to one, or <c>null</c> when the API did not report it.</summary>
+    public double? Confidence { get; init; }
+}
+
 /// <summary>Answers keyed by question name, with model and usage metadata.</summary>
 public sealed class SystemOneResult
 {
@@ -127,6 +156,9 @@ public sealed class SystemOneResult
 
     /// <summary>Return the named Score answer.</summary>
     public ScoreAnswer GetScore(string name) => Get<ScoreAnswer>(name);
+
+    /// <summary>Return the named Box answer.</summary>
+    public BoxAnswer GetBox(string name) => Get<BoxAnswer>(name);
 }
 
 /// <summary>Parsed data with its HTTP response and request ID. Mirrors JS <c>WithResponse</c>.</summary>

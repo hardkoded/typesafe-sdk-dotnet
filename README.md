@@ -45,6 +45,7 @@ That mirrors the [JavaScript quickstart](https://docs.typesafe.ai/sdk/javascript
 | Choice | `Question.Choice(instructions, criteria)` | `choice`, `probabilities`, `confidence` |
 | Score | `Question.Score(instructions, level0, level1, …)` | `score`, `legend`, `probabilities`, `confidence` |
 | Noul | `Question.Noul(instructions, criteria?)` | `noul` (P(yes), 0–1) |
+| Box | `Question.Box(instructions)` | `box` (`Top`, `Bottom`, `Left`, `Right`), nullable `confidence` |
 
 Batch independent questions in one `SystemOneAsync` call. See [primitives](https://docs.typesafe.ai/primitives.md).
 
@@ -73,6 +74,18 @@ await client.SystemOneAsync(new SystemOneRequest
     Questions = Question.Map(("damaged", Question.Noul("Is <photo> damaged?"))),
     Assets = new Dictionary<string, Image> { ["<photo>"] = photo },
 });
+```
+
+To locate something in an image, ask a `Question.Box` question with the `jev-preview` model. The answer's `Box` holds `Top`/`Bottom` (fractions of height) and `Left`/`Right` (fractions of width), and `Confidence` is `null` when the API reports none:
+
+```csharp
+var response = await client.SystemOneAsync(new SystemOneRequest
+{
+    State = photo,
+    Questions = Question.Map(("damage", Question.Box("The damaged area of the product"))),
+    Model = "jev-preview",
+});
+var box = response.GetBox("damage").Box;
 ```
 
 Requests with images are sent as `multipart/form-data`. An image in a plain interpolated string, or a name in `Assets` that the request never uses, throws a `TypeSafeException` before sending. See [Images](docs/articles/images.md).

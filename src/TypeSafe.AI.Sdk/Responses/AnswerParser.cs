@@ -88,9 +88,38 @@ internal static class AnswerParser
                 Legend = ReadElementMap(node, "legend"),
                 Probabilities = ReadDoubleMap(node, "probabilities"),
             },
+            "box" => new BoxAnswer
+            {
+                Box = ReadBox(node),
+                Confidence = node.TryGetProperty("confidence", out var boxConfidence)
+                    && boxConfidence.ValueKind == JsonValueKind.Number
+                    ? boxConfidence.GetDouble()
+                    : null,
+            },
             _ => throw new TypeSafeException($"Unexpected answer type \"{type}\" for \"{name}\"."),
         };
     }
+
+    private static BoxCoordinates ReadBox(JsonElement node)
+    {
+        if (!node.TryGetProperty("box", out var box) || box.ValueKind != JsonValueKind.Object)
+        {
+            return new BoxCoordinates();
+        }
+
+        return new BoxCoordinates
+        {
+            Top = ReadDouble(box, "top"),
+            Bottom = ReadDouble(box, "bottom"),
+            Left = ReadDouble(box, "left"),
+            Right = ReadDouble(box, "right"),
+        };
+    }
+
+    private static double ReadDouble(JsonElement node, string name) =>
+        node.TryGetProperty(name, out var property) && property.ValueKind == JsonValueKind.Number
+            ? property.GetDouble()
+            : 0;
 
     private static IReadOnlyDictionary<string, double> ReadDoubleMap(JsonElement node, string name)
     {
