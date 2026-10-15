@@ -47,6 +47,14 @@ public sealed class CompressionTests
     }
 
     [Fact]
+    public void The_threshold_is_measured_in_UTF8_bytes()
+    {
+        Assert.False(BodyCompression.Encode(new string('a', 1023), compression: true).Compressed);
+        Assert.True(BodyCompression.Encode(new string('a', 1024), compression: true).Compressed);
+        Assert.True(BodyCompression.Encode(new string('é', 600), compression: true).Compressed);
+    }
+
+    [Fact]
     public async Task Compression_can_be_disabled()
     {
         var state = new string('a', 5000);
