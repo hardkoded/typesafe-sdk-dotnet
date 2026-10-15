@@ -49,7 +49,7 @@ internal static class AnswerParser
                 "Unexpected response shape from GET /v1/models; expected { models: [...] }.");
         }
 
-        var cards = new List<ModelCard>();
+        List<ModelCard> cards = [];
         foreach (var item in models.EnumerateArray())
         {
             cards.Add(new ModelCard
