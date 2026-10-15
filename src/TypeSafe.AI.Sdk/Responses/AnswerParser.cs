@@ -128,8 +128,8 @@ internal static class AnswerParser
     }
 
     private static int? ReadNullableInt(JsonElement node, string name) =>
-        node.TryGetProperty(name, out var property) && property.ValueKind == JsonValueKind.Number
-            ? property.GetInt32()
+        node.TryGetProperty(name, out var property) && property.ValueKind == JsonValueKind.Number && property.TryGetInt32(out var value)
+            ? value
             : null;
 
     private static JsonElement AsObject(object? body, string endpoint)
