@@ -164,6 +164,12 @@ export TYPESAFE_API_KEY=tsk_...
 dotnet run --project samples/TypeSafe.AI.Sdk.Sample
 ```
 
+`samples/TypeSafe.AI.Sdk.WallySample` finds a character in a busy scene with `Question.Box` and saves a copy of the scene with a box around him. It takes the paths of your own images, because the sample ships none:
+
+```bash
+dotnet run --project samples/TypeSafe.AI.Sdk.WallySample -- scene.png character.png found.png
+```
+
 ## Documentation
 
 - TypeSafe concepts and HTTP API: https://docs.typesafe.ai/sdk · https://docs.typesafe.ai/api.md
