@@ -9,7 +9,7 @@ namespace TypeSafe.AI.Sdk;
 /// <summary>A TypeSafe question identified by its <c>type</c> field.</summary>
 public abstract class Question
 {
-    /// <summary>Question type: <c>noul</c>, <c>choice</c>, or <c>score</c>.</summary>
+    /// <summary>Question type: <c>noul</c>, <c>choice</c>, <c>score</c>, or <c>box</c>.</summary>
     public abstract string Type { get; }
 
     /// <summary>
@@ -98,6 +98,13 @@ public abstract class Question
     /// <inheritdoc cref="Score(object?, IReadOnlyList{object?})" />
     public static ScoreQuestion Score(object? instructions, params object?[] criteria) =>
         Score(instructions, (IReadOnlyList<object?>)criteria);
+
+    /// <summary>
+    /// Create a question that locates what its instructions describe in the request's image.
+    /// Mirrors JS <c>box()</c>. Use the <c>jev-preview</c> model for box questions.
+    /// </summary>
+    /// <param name="instructions">What to locate, as text, an asset, a JSON object or array; defaults to <c>null</c>.</param>
+    public static BoxQuestion Box(object? instructions = null) => new(instructions);
 
     /// <summary>Reject empty question sets and score questions without a list of at least two criteria.</summary>
     public static void Validate(IReadOnlyDictionary<string, Question> questions)
@@ -244,65 +251,78 @@ public sealed class ScoreQuestion : Question
     }
 }
 
+/// <summary>A question that locates what its instructions describe in the request's image.</summary>
+public sealed class BoxQuestion : Question
+{
+    /// <inheritdoc />
+    public override string Type => "box";
+
+    /// <summary>Create a Box question.</summary>
+    public BoxQuestion(object? instructions = null, bool includeInstructions = true)
+        : base(instructions, includeInstructions)
+    {
+    }
+}
+
 internal static class QuestionWire
 {
-    public static JsonObject ToJson(Question question)
+    public static JsonObject ToJson(Question question, AssetContext? assets = null)
     {
         var node = new JsonObject { ["type"] = question.Type };
         if (question.IncludeInstructions)
         {
-            node["instructions"] = JsonValues.ToNode(question.Instructions);
+            node["instructions"] = JsonValues.ToNode(question.Instructions, assets);
         }
 
         switch (question)
         {
             case NoulQuestion noul when noul.IncludeCriteria:
-                node["criteria"] = noul.Criteria is null ? null : ToNoulCriteria(noul.Criteria);
+                node["criteria"] = noul.Criteria is null ? null : ToNoulCriteria(noul.Criteria, assets);
                 break;
             case ChoiceQuestion choice:
-                node["criteria"] = ToObject(choice.Criteria);
+                node["criteria"] = ToObject(choice.Criteria, assets);
                 break;
             case ScoreQuestion score:
-                node["criteria"] = ToArray(score.Criteria);
+                node["criteria"] = ToArray(score.Criteria, assets);
                 break;
         }
 
         return node;
     }
 
-    private static JsonObject ToNoulCriteria(NoulCriteria criteria)
+    private static JsonObject ToNoulCriteria(NoulCriteria criteria, AssetContext? assets)
     {
         var node = new JsonObject();
         if (criteria.IncludeTrue)
         {
-            node["true"] = JsonValues.ToNode(criteria.True);
+            node["true"] = JsonValues.ToNode(criteria.True, assets);
         }
 
         if (criteria.IncludeFalse)
         {
-            node["false"] = JsonValues.ToNode(criteria.False);
+            node["false"] = JsonValues.ToNode(criteria.False, assets);
         }
 
         return node;
     }
 
-    private static JsonObject ToObject(IReadOnlyDictionary<string, object?> values)
+    private static JsonObject ToObject(IReadOnlyDictionary<string, object?> values, AssetContext? assets)
     {
         var node = new JsonObject();
         foreach (var pair in values)
         {
-            node[pair.Key] = JsonValues.ToNode(pair.Value);
+            node[pair.Key] = JsonValues.ToNode(pair.Value, assets);
         }
 
         return node;
     }
 
-    private static JsonArray ToArray(IReadOnlyList<object?> values)
+    private static JsonArray ToArray(IReadOnlyList<object?> values, AssetContext? assets)
     {
         var node = new JsonArray();
         foreach (var value in values)
         {
-            node.Add(JsonValues.ToNode(value));
+            node.Add(JsonValues.ToNode(value, assets));
         }
 
         return node;

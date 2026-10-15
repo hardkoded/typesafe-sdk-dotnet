@@ -88,9 +88,38 @@ internal static class AnswerParser
                 Legend = ReadElementMap(node, "legend"),
                 Probabilities = ReadDoubleMap(node, "probabilities"),
             },
+            "box" => new BoxAnswer
+            {
+                Box = ReadBox(node),
+                Confidence = node.TryGetProperty("confidence", out var boxConfidence)
+                    && boxConfidence.ValueKind == JsonValueKind.Number
+                    ? boxConfidence.GetDouble()
+                    : null,
+            },
             _ => throw new TypeSafeException($"Unexpected answer type \"{type}\" for \"{name}\"."),
         };
     }
+
+    private static BoxCoordinates ReadBox(JsonElement node)
+    {
+        if (!node.TryGetProperty("box", out var box) || box.ValueKind != JsonValueKind.Object)
+        {
+            return new BoxCoordinates();
+        }
+
+        return new BoxCoordinates
+        {
+            Top = ReadDouble(box, "top"),
+            Bottom = ReadDouble(box, "bottom"),
+            Left = ReadDouble(box, "left"),
+            Right = ReadDouble(box, "right"),
+        };
+    }
+
+    private static double ReadDouble(JsonElement node, string name) =>
+        node.TryGetProperty(name, out var property) && property.ValueKind == JsonValueKind.Number
+            ? property.GetDouble()
+            : 0;
 
     private static IReadOnlyDictionary<string, double> ReadDoubleMap(JsonElement node, string name)
     {
@@ -142,33 +171,53 @@ internal static class AnswerParser
         throw new TypeSafeException($"Unexpected response shape from {endpoint}; expected a JSON object.");
     }
 
-    public static JsonObject BuildSystemOnePayload(SystemOneRequest request, string defaultModel)
+    public static (JsonObject Payload, IReadOnlyList<AssetPart> Assets) BuildSystemOnePayload(
+        SystemOneRequest request,
+        string defaultModel)
     {
         Question.Validate(new Dictionary<string, Question>(request.Questions));
+        var assets = new AssetContext(request.Assets);
         var payload = new JsonObject
         {
-            ["state"] = JsonValues.ToNode(request.State),
+            ["state"] = JsonValues.ToNode(request.State, assets),
             ["model"] = request.Model ?? defaultModel,
-            ["questions"] = BuildQuestions(request.Questions),
+            ["questions"] = BuildQuestions(request.Questions, assets),
         };
 
         if (request.Extra is not null)
         {
             foreach (var pair in request.Extra)
             {
-                payload[pair.Key] = JsonValues.ToNode(pair.Value);
+                payload[pair.Key] = JsonValues.ToNode(pair.Value, assets);
             }
         }
 
-        return payload;
+        var parts = assets.Resolve(payload);
+        if (parts.Count > 0)
+        {
+            if (payload.ContainsKey("assets"))
+            {
+                throw new TypeSafeException("`assets` is reserved for images; remove it from `Extra`.");
+            }
+
+            var entries = new JsonObject();
+            foreach (var part in parts)
+            {
+                entries[part.Alias] = new JsonObject { ["type"] = "image", ["part"] = part.Name };
+            }
+
+            payload["assets"] = entries;
+        }
+
+        return (payload, parts);
     }
 
-    private static JsonObject BuildQuestions(IDictionary<string, Question> questions)
+    private static JsonObject BuildQuestions(IDictionary<string, Question> questions, AssetContext assets)
     {
         var node = new JsonObject();
         foreach (var pair in questions)
         {
-            node[pair.Key] = QuestionWire.ToJson(pair.Value);
+            node[pair.Key] = QuestionWire.ToJson(pair.Value, assets);
         }
 
         return node;

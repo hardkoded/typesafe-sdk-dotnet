@@ -13,10 +13,12 @@ internal static class BodyCompression
 
     public const string ContentEncoding = "zstd";
 
+    public static (byte[] Bytes, bool Compressed) Encode(string json, bool compression) =>
+        Encode(Encoding.UTF8.GetBytes(json), compression);
+
     /// <summary>The request body bytes, zstd-compressed when enabled and large enough.</summary>
-    public static (byte[] Bytes, bool Compressed) Encode(string json, bool compression)
+    public static (byte[] Bytes, bool Compressed) Encode(byte[] bytes, bool compression)
     {
-        var bytes = Encoding.UTF8.GetBytes(json);
         if (!compression || bytes.Length < MinCompressedBodyBytes)
         {
             return (bytes, false);

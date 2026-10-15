@@ -73,6 +73,55 @@ public sealed class QuestionAndRequestTests
     }
 
     [Fact]
+    public void Box_defaults_its_instructions_to_null()
+    {
+        var question = Question.Box("The dog");
+        Assert.Equal("box", question.Type);
+        Assert.Equal("The dog", question.Instructions);
+        Assert.Null(Question.Box().Instructions);
+        Assert.True(Question.Box().IncludeInstructions);
+    }
+
+    [Fact]
+    public async Task Box_question_is_sent_and_its_answer_is_parsed()
+    {
+        var handler = ScriptedHandler.Json(new
+        {
+            model = "jev-preview",
+            answers = new
+            {
+                dog = new { type = "box", box = new { top = 0.1, bottom = 0.6, left = 0.25, right = 0.75 }, confidence = 0.9 },
+                cat = new { type = "box", box = new { top = 0, bottom = 1, left = 0, right = 1 }, confidence = (double?)null },
+            },
+            usage = new { input_tokens = 1, output_tokens = 1 },
+        });
+        using var client = TestClient.Create(handler);
+
+        var result = await client.SystemOneAsync(new SystemOneRequest
+        {
+            State = "s",
+            Questions = Question.Map(("dog", Question.Box(new Dictionary<string, object?> { ["find"] = "the dog" })), ("cat", Question.Box())),
+            Model = "jev-preview",
+        });
+
+        var questions = handler.Requests[0].Body!.Value.GetProperty("questions");
+        Assert.Equal("box", questions.GetProperty("dog").GetProperty("type").GetString());
+        Assert.Equal("the dog", questions.GetProperty("dog").GetProperty("instructions").GetProperty("find").GetString());
+        Assert.Equal(JsonValueKind.Null, questions.GetProperty("cat").GetProperty("instructions").ValueKind);
+        Assert.False(questions.GetProperty("cat").TryGetProperty("criteria", out _));
+
+        var dog = result.GetBox("dog");
+        Assert.Equal("box", dog.Type);
+        Assert.Equal(0.1, dog.Box.Top);
+        Assert.Equal(0.6, dog.Box.Bottom);
+        Assert.Equal(0.25, dog.Box.Left);
+        Assert.Equal(0.75, dog.Box.Right);
+        Assert.Equal(0.9, dog.Confidence);
+        Assert.Null(result.GetBox("cat").Confidence);
+        Assert.Throws<TypeSafeException>(() => result.GetNoul("dog"));
+    }
+
+    [Fact]
     public void Descriptions_can_be_json_objects()
     {
         var rich = new Dictionary<string, object?> { ["summary"] = "warm", ["examples"] = new object[] { "hi!", "welcome" } };

@@ -6,7 +6,7 @@ namespace TypeSafe.AI.Sdk;
 /// <summary>State and named questions for <see cref="TypeSafeClient.SystemOneAsync(SystemOneRequest, RequestOptions?, CancellationToken)"/>.</summary>
 public sealed class SystemOneRequest
 {
-    /// <summary>Text, a JSON object or array, or <c>null</c> to evaluate.</summary>
+    /// <summary>Text, a JSON object or array, an <see cref="Image"/>, or <c>null</c> to evaluate.</summary>
     public object? State { get; set; }
 
     /// <summary>Nonempty questions keyed by the names used to identify their answers.</summary>
@@ -14,6 +14,14 @@ public sealed class SystemOneRequest
 
     /// <summary>Model override; omitted values inherit the client <c>defaultModel</c>.</summary>
     public string? Model { get; set; }
+
+    /// <summary>
+    /// Images keyed by a reference of your choice, to reference them from plain strings such as prompts stored in
+    /// configuration. Every name must appear in the request; otherwise the call throws before sending.
+    /// An image that is also placed in content or in <see cref="TextWithAssets"/> is written there as its name.
+    /// Image support is experimental; see <see cref="Image"/>.
+    /// </summary>
+    public IDictionary<string, Image>? Assets { get; set; }
 
     /// <summary>
     /// Additional properties forwarded on the wire, including <c>null</c> values.
