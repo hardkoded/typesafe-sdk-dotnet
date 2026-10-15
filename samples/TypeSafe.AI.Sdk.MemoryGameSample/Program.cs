@@ -26,8 +26,8 @@ var page = await browser.NewPageAsync(new BrowserNewPageOptions
 {
     ViewportSize = new ViewportSize { Width = 1280, Height = 1000 },
 
-    // A card is about 126 CSS pixels wide. Doubling the pixel ratio gives the API a larger image to accept.
-    DeviceScaleFactor = 2,
+    // A card is about 128 CSS pixels wide, and the API rejects images under about 300 pixels ("Invalid image dimensions").
+    DeviceScaleFactor = 3,
 });
 
 var game = new MemoryGame(client, page);
