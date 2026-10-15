@@ -1,12 +1,13 @@
 # Questions
 
-System One answers three question shapes. Build them with static helpers on <xref:TypeSafe.AI.Sdk.Question>, then read typed answers from <xref:TypeSafe.AI.Sdk.SystemOneResult>.
+System One answers four question shapes. Build them with static helpers on <xref:TypeSafe.AI.Sdk.Question>, then read typed answers from <xref:TypeSafe.AI.Sdk.SystemOneResult>.
 
 | Need | Builder | Answer |
 | --- | --- | --- |
 | One of a defined set | `Question.Choice` | `choice`, probabilities, confidence |
 | Degree on ordered levels | `Question.Score` | `score`, legend, probabilities, confidence |
 | Is this true? | `Question.Noul` | `noul` ∈ [0, 1] — no separate confidence |
+| Where is it in the image? | `Question.Box` | `box` edges as fractions, nullable confidence |
 
 See [TypeSafe primitives](https://docs.typesafe.ai/primitives.md) for conceptual background.
 
@@ -57,6 +58,14 @@ Probability that the statement is true.
 ```csharp
 var answer = response.GetNoul("is_refund");
 Console.WriteLine(answer.Noul);
+```
+
+## Box
+
+Locates what the instructions describe in the request's image. See [Images](images.md#locate-something-with-box).
+
+```csharp
+("damage", Question.Box("The damaged area of the product"))
 ```
 
 ## Batching

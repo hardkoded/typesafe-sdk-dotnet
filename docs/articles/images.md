@@ -59,3 +59,18 @@ var response = await client.SystemOneAsync(new SystemOneRequest
 ```
 
 Use distinct delimiters, such as `<delivered>`, so references don't match ordinary text. An image in `Assets` that is also placed in content or in `TextWithAssets` is written there as its name. Every name in `Assets` must appear in the request; otherwise the call throws a <xref:TypeSafe.AI.Sdk.TypeSafeException> before sending.
+
+## Locate something with `Box`
+
+Ask a `Question.Box` question to locate what its instructions describe. The answer's `Box` holds the edges as fractions of the image's height (`Top`, `Bottom`) and width (`Left`, `Right`), and its `Confidence` is `null` when the API doesn't report one. Use the `jev-preview` model for box questions:
+
+```csharp
+var response = await client.SystemOneAsync(new SystemOneRequest
+{
+    State = Image.FromFile("returns/RMA-1042.jpg"),
+    Questions = Question.Map(("damage", Question.Box("The damaged area of the product"))),
+    Model = "jev-preview",
+});
+var box = response.GetBox("damage").Box;
+Console.WriteLine($"{box.Left},{box.Top} to {box.Right},{box.Bottom}");
+```

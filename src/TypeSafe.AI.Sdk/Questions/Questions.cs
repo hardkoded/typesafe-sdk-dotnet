@@ -9,7 +9,7 @@ namespace TypeSafe.AI.Sdk;
 /// <summary>A TypeSafe question identified by its <c>type</c> field.</summary>
 public abstract class Question
 {
-    /// <summary>Question type: <c>noul</c>, <c>choice</c>, or <c>score</c>.</summary>
+    /// <summary>Question type: <c>noul</c>, <c>choice</c>, <c>score</c>, or <c>box</c>.</summary>
     public abstract string Type { get; }
 
     /// <summary>
@@ -98,6 +98,13 @@ public abstract class Question
     /// <inheritdoc cref="Score(object?, IReadOnlyList{object?})" />
     public static ScoreQuestion Score(object? instructions, params object?[] criteria) =>
         Score(instructions, (IReadOnlyList<object?>)criteria);
+
+    /// <summary>
+    /// Create a question that locates what its instructions describe in the request's image.
+    /// Mirrors JS <c>box()</c>. Use the <c>jev-preview</c> model for box questions.
+    /// </summary>
+    /// <param name="instructions">What to locate, as text, an asset, a JSON object or array; defaults to <c>null</c>.</param>
+    public static BoxQuestion Box(object? instructions = null) => new(instructions);
 
     /// <summary>Reject empty question sets and score questions without a list of at least two criteria.</summary>
     public static void Validate(IReadOnlyDictionary<string, Question> questions)
@@ -241,6 +248,19 @@ public sealed class ScoreQuestion : Question
     {
         Criteria = criteria ?? throw new TypeSafeException(
             "Score criteria must be a list of descriptions indexed by score from zero, not a map.");
+    }
+}
+
+/// <summary>A question that locates what its instructions describe in the request's image.</summary>
+public sealed class BoxQuestion : Question
+{
+    /// <inheritdoc />
+    public override string Type => "box";
+
+    /// <summary>Create a Box question.</summary>
+    public BoxQuestion(object? instructions = null, bool includeInstructions = true)
+        : base(instructions, includeInstructions)
+    {
     }
 }
 
