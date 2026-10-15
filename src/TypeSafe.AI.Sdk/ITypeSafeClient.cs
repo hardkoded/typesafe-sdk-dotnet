@@ -21,6 +21,12 @@ public interface ITypeSafeClient
     /// <summary>Timeout per attempt in milliseconds.</summary>
     int TimeoutMs { get; }
 
+    /// <summary>
+    /// Request body compression, or <see cref="RequestCompression.None"/> when bodies are sent uncompressed.
+    /// Resolved at construction; never <see cref="RequestCompression.Auto"/>.
+    /// </summary>
+    RequestCompression Compression { get; }
+
     /// <summary>The models available to the account.</summary>
     ModelsResource Models { get; }
 

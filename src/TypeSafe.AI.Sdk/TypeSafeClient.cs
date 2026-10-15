@@ -47,6 +47,9 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
     /// <inheritdoc />
     public int TimeoutMs { get; }
 
+    /// <inheritdoc />
+    public RequestCompression Compression { get; }
+
     /// <summary>Additional headers sent with each request.</summary>
     public IReadOnlyDictionary<string, string> DefaultHeaders => _defaultHeaders;
 
@@ -57,7 +60,9 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
     /// Create a client. Explicit options take precedence over environment variables, then SDK defaults.
     /// Empty or whitespace-only environment values are ignored.
     /// </summary>
-    /// <exception cref="TypeSafeException">The API key is missing or configuration is invalid.</exception>
+    /// <exception cref="TypeSafeException">
+    /// The API key is missing, configuration is invalid, or the runtime lacks the requested compression.
+    /// </exception>
     public TypeSafeClient(TypeSafeClientOptions? options = null)
         : this(httpClient: null, options, ownsHttpClient: null)
     {
@@ -94,6 +99,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         Logger = new LevelFilteredLogger(options.Logger ?? new ConsoleTypeSafeLogger(), LogLevel);
         Retry = RetryPolicy.Resolve(RetryPolicy.Default, options.Retry).Validate();
         TimeoutMs = Guards.PositiveMs("timeout", options.TimeoutMs ?? RetryCalculator.DefaultTimeoutMs);
+        Compression = RequestCompressor.Resolve(options.Compression);
         _defaultHeaders = options.DefaultHeaders is null
             ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             : new Dictionary<string, string>(options.DefaultHeaders, StringComparer.OrdinalIgnoreCase);
@@ -222,6 +228,28 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         var tag = $"#{Interlocked.Increment(ref _requestCount)} {method.Method} {path}";
         var url = BaseUrl + path;
         var json = body?.ToJsonString(JsonValues.SerializerOptions);
+        byte[]? compressedBody = null;
+        var encoding = RequestCompression.None;
+        if (json is not null)
+        {
+            var utf8 = Encoding.UTF8.GetBytes(json);
+            encoding = utf8.Length < RequestCompressor.MinCompressedBodyBytes
+                ? RequestCompression.None
+                : Compression;
+            if (encoding == RequestCompression.Zstd)
+            {
+                try
+                {
+                    token.ThrowIfCancellationRequested();
+                    compressedBody = RequestCompressor.Compress(utf8);
+                }
+                catch (OperationCanceledException ex) when (token.IsCancellationRequested)
+                {
+                    Logger.Info($"{tag} aborted by caller while compressing the body");
+                    throw new ApiUserAbortException(innerException: ex);
+                }
+            }
+        }
 
         HttpResponseMessage? response = null;
         object? parsedBody = null;
@@ -231,7 +259,9 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             var retriesLeft = retry.MaxRetries - attempt;
             try
             {
-                var attemptResult = await AttemptAsync(tag, url, method, json, headers, attempt, timeout, token).ConfigureAwait(false);
+                var attemptResult = await AttemptAsync(
+                    tag, url, method, json, compressedBody, encoding, headers, attempt, timeout, token)
+                    .ConfigureAwait(false);
                 response = attemptResult.Response;
                 responseElapsedMs = attemptResult.ElapsedMs;
             }
@@ -282,6 +312,8 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         string url,
         HttpMethod method,
         string? json,
+        byte[]? compressedBody,
+        RequestCompression encoding,
         IReadOnlyDictionary<string, string> userHeaders,
         int attempt,
         int timeout,
@@ -291,9 +323,11 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         attemptCts.CancelAfter(timeout);
 
         using var request = new HttpRequestMessage(method, url);
-        foreach (var header in BuildHeaders(userHeaders, json is not null, attempt))
+        var headers = BuildHeaders(userHeaders, json is not null, encoding, attempt);
+        foreach (var header in headers)
         {
-            if (header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
+            if (header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase)
+                || header.Key.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -303,12 +337,25 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
 
         if (json is not null)
         {
-            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            if (compressedBody is not null)
+            {
+                var content = new ByteArrayContent(compressedBody);
+                content.Headers.ContentType = new MediaTypeHeaderValue("application/json")
+                {
+                    CharSet = "utf-8",
+                };
+                content.Headers.ContentEncoding.Add(RequestCompressor.ContentEncoding);
+                request.Content = content;
+            }
+            else
+            {
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            }
         }
 
         Logger.Debug($"{tag} -> {url}", new
         {
-            headers = HeaderRedactor.Redact(BuildHeaders(userHeaders, json is not null, attempt)),
+            headers = HeaderRedactor.Redact(headers),
             body = json is null ? null : JsonNode.Parse(json),
         });
 
@@ -363,7 +410,11 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         }
     }
 
-    private Dictionary<string, string> BuildHeaders(IReadOnlyDictionary<string, string> userHeaders, bool hasBody, int attempt)
+    private Dictionary<string, string> BuildHeaders(
+        IReadOnlyDictionary<string, string> userHeaders,
+        bool hasBody,
+        RequestCompression encoding,
+        int attempt)
     {
         var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in userHeaders)
@@ -371,7 +422,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             headers[pair.Key] = pair.Value;
         }
 
-        // User-supplied headers go first so they can't clobber auth or the JSON content type.
+        // User-supplied headers go first so they can't clobber auth, the JSON content type, or the encoding.
         headers["Authorization"] = $"Bearer {_apiKey}";
         headers["Accept"] = "application/json";
         headers["User-Agent"] = $"typesafe-sdk-dotnet/{SdkVersion.Current}";
@@ -380,6 +431,15 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         if (hasBody)
         {
             headers["Content-Type"] = "application/json";
+        }
+
+        if (encoding == RequestCompression.Zstd)
+        {
+            headers["Content-Encoding"] = RequestCompressor.ContentEncoding;
+        }
+        else
+        {
+            headers.Remove("Content-Encoding");
         }
 
         if (attempt > 0)

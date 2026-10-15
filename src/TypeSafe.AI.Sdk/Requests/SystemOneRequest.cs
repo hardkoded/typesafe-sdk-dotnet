@@ -73,6 +73,21 @@ public sealed class TypeSafeClientOptions
     public IDictionary<string, string>? DefaultHeaders { get; set; }
 
     /// <summary>
+    /// Request body compression, sent as <c>Content-Encoding</c>. Default:
+    /// <see cref="RequestCompression.Auto"/>, which uses zstd when available, otherwise
+    /// <see cref="RequestCompression.None"/>. Bodies under 1 KiB are always sent uncompressed.
+    /// Pass <see cref="RequestCompression.None"/> to send all bodies uncompressed, for example
+    /// to an API that doesn't accept compressed requests. Explicit
+    /// <see cref="RequestCompression.Zstd"/> throws <see cref="TypeSafeException"/> if zstd
+    /// is unavailable.
+    /// </summary>
+    /// <remarks>
+    /// zstd is provided by ZstdSharp.Port on both <c>net10.0</c> and <c>netstandard2.0</c>.
+    /// The BCL has no zstd APIs until .NET 11 (<c>System.IO.Compression.ZstandardStream</c>).
+    /// </remarks>
+    public RequestCompression Compression { get; set; }
+
+    /// <summary>
     /// Optional <see cref="HttpMessageHandler"/> used when the client creates its own <see cref="HttpClient"/>.
     /// Useful for tests.
     /// </summary>

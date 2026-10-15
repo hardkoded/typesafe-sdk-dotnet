@@ -21,6 +21,8 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="All" />
+    <!-- zstd is not in the BCL until .NET 11; ZstdSharp.Port is a managed port used on both TFMs. -->
+    <PackageReference Include="ZstdSharp.Port" Version="0.8.8" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
