@@ -30,5 +30,5 @@ var urgent = result.GetNoul("urgent");
 Console.WriteLine($"model:      {result.Model}");
 Console.WriteLine($"category:   {category.Choice} (confidence {category.Confidence:0.00})");
 Console.WriteLine($"urgent:     {urgent.Noul:0.00}");
-Console.WriteLine($"usage:      {result.Usage.InputTokens} in / {result.Usage.OutputTokens} out");
+Console.WriteLine($"usage:      {result.Usage.InputTokens?.ToString() ?? "n/a"} in / {result.Usage.OutputTokens?.ToString() ?? "n/a"} out");
 return 0;
