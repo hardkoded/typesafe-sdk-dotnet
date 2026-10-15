@@ -232,7 +232,7 @@ internal sealed class AssetWriteContext
     /// </summary>
     private static string JsonStringContents(string value)
     {
-        var json = JsonSerializer.Serialize(value);
+        var json = JsonSerializer.Serialize(value, JsonValues.SerializerOptions);
 #if NET
         return json[1..^1];
 #else

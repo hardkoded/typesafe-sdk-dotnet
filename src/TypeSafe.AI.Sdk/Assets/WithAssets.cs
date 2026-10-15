@@ -4,6 +4,7 @@
 using System.Collections;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -59,6 +60,12 @@ public static class WithAssets
     /// var state = WithAssets.Format($"Compare {photo} with the listing.");
     /// </code>
     /// </example>
+    public static TextWithAssets Format(InterpolatedStringHandler handler) => handler.ToTextWithAssets();
+
+    /// <summary>
+    /// Format a <see cref="FormattableString"/> so the assets interpolated into it are sent with the text.
+    /// Prefer the interpolated-string overload when writing <c>$"…"</c> literals.
+    /// </summary>
     public static TextWithAssets Format(FormattableString formattable)
     {
         if (formattable is null)
@@ -117,6 +124,36 @@ public static class WithAssets
         }
 
         return FromText(string.Join(separator ?? ",", pieces), list);
+    }
+
+    /// <summary>
+    /// Interpolated-string handler for <see cref="Format(InterpolatedStringHandler)"/>.
+    /// Collects holes as values (so images are attached) while writing them as references.
+    /// </summary>
+    [InterpolatedStringHandler]
+    public struct InterpolatedStringHandler
+    {
+        private readonly StringBuilder _builder;
+        private readonly List<object?> _values;
+
+        /// <summary>Create a handler for an interpolated string passed to <see cref="Format(InterpolatedStringHandler)"/>.</summary>
+        public InterpolatedStringHandler(int literalLength, int formattedCount)
+        {
+            _builder = new StringBuilder(literalLength);
+            _values = new List<object?>(formattedCount);
+        }
+
+        /// <summary>Append a literal piece of the interpolated string.</summary>
+        public void AppendLiteral(string value) => _builder.Append(value);
+
+        /// <summary>Append a formatted hole, tracking the original value for asset collection.</summary>
+        public void AppendFormatted<T>(T value)
+        {
+            _values.Add(value);
+            _builder.Append(value is null ? "" : value.ToString());
+        }
+
+        internal TextWithAssets ToTextWithAssets() => FromText(_builder.ToString(), _values);
     }
 
     internal static TextWithAssets FromText(string text, IEnumerable<object?> values)

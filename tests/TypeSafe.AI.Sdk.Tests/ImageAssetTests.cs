@@ -24,7 +24,7 @@ public sealed class ImageAssetTests
         Assert.Matches(@"^<image:[0-9a-f]{32}>$", photo.ToString());
         Assert.NotEqual(photo.ToString(), listing.ToString());
         Assert.Equal("image", photo.Type);
-        Assert.Equal(photo.ToString(), JsonSerializer.Serialize(photo).Trim('"'));
+        Assert.Equal(photo.ToString(), JsonSerializer.Deserialize<string>(JsonSerializer.Serialize(photo)));
     }
 
     [Fact]

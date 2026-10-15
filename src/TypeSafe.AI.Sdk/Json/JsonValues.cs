@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -13,6 +14,8 @@ internal static class JsonValues
     {
         PropertyNameCaseInsensitive = true,
         WriteIndented = false,
+        // Match JSON.stringify: keep `<image:…>` references and named assets unescaped.
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
     public static JsonNode? ToNode(object? value) => ToNode(value, context: null);
