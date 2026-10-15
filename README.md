@@ -48,6 +48,81 @@ That mirrors the [JavaScript quickstart](https://docs.typesafe.ai/sdk/javascript
 
 Batch independent questions in one `SystemOneAsync` call. See [primitives](https://docs.typesafe.ai/primitives.md).
 
+## Images
+
+Create an image with `new Image(bytes)` (or `ReadOnlyMemory<byte>` / `Stream`) from PNG or JPEG file bytes, or with `Image.FromBase64()` from base64 text. Images must be PNG or JPEG; the API detects the format from the file bytes and rejects other formats, such as WebP and GIF, with a `BadRequestException`. There are three ways to use an image in a request, and they can be combined.
+
+Image support is experimental. The JavaScript SDK does **not** set `TypeSafe-Danger-Zone-Images` automatically, and this port matches that: opt in yourself via `DefaultHeaders` or per-call `RequestOptions.Headers`:
+
+```csharp
+using var client = new TypeSafeClient(new TypeSafeClientOptions
+{
+    DefaultHeaders = new Dictionary<string, string>
+    {
+        ["TypeSafe-Danger-Zone-Images"] = "true",
+    },
+});
+```
+
+### Place the image in the content
+
+Put the image anywhere in `state`, question instructions, or criteria:
+
+```csharp
+var photo = new Image(await File.ReadAllBytesAsync("returns/RMA-1042.jpg"));
+
+var result = await client.SystemOneAsync(
+    new { claim = "The mug arrived with a chipped rim.", photo },
+    ("damaged", Question.Noul("Is the product in the photo damaged?")),
+    ("severity", Question.Score("How severe is the damage?", "none", "cosmetic", "unusable")));
+```
+
+C# has no tagged templates. An image interpolated into a **plain** string (`$"Compare {photo}"`) is **not** attached; the call throws `TypeSafeException` before send. Use `WithAssets.Format` / `WithAssets.Join` instead.
+
+### Write the image into text with `WithAssets`
+
+```csharp
+var upload = new Image(await File.ReadAllBytesAsync("upload.jpg"));
+var catalog = new Image(await File.ReadAllBytesAsync("catalog.png"));
+
+var result = await client.SystemOneAsync(
+    WithAssets.Format($"A seller uploaded {upload} for a listing whose catalog photo is {catalog}."),
+    ("sameProduct", Question.Noul(WithAssets.Format($"Does {upload} show the same product as {catalog}?"))),
+    ("quality", Question.Choice(WithAssets.Format($"Is {upload} usable as a listing photo?"),
+        ("usable", null),
+        ("blurry", null),
+        ("cropped", null),
+        ("notAProduct", null))));
+```
+
+Each image is sent once, however many times it is used. To write a list of images, join it with `WithAssets.Join`:
+
+```csharp
+var state = WithAssets.Format($"The seller uploaded {WithAssets.Join(uploads, ", ")}.");
+```
+
+### Choose your own references with `Assets`
+
+Pass images in `SystemOneRequest.Assets`, keyed by a reference of your choice, to reference them from plain strings:
+
+```csharp
+var result = await client.SystemOneAsync(new SystemOneRequest
+{
+    State = "A customer returned <delivered>. The catalog photo is <catalog>.",
+    Questions = Question.Map(
+        ("matches", Question.Noul("Is <delivered> the product shown in <catalog>?"))),
+    Assets = new Dictionary<string, Image>
+    {
+        ["<delivered>"] = new Image(await File.ReadAllBytesAsync("returns/RMA-1042.jpg")),
+        ["<catalog>"] = new Image(await File.ReadAllBytesAsync("catalog/mug.png")),
+    },
+});
+```
+
+Use distinct delimiters, such as `<name>`, so references don't match ordinary text. Every name in `Assets` must appear in the request; otherwise the call rejects with a `TypeSafeException` before sending.
+
+Requests with images are sent as `multipart/form-data`, with the JSON payload in a `request` part and each image's file bytes in its own `asset-N` part.
+
 ## Configuration
 
 Explicit options win, then environment variables, then SDK defaults (same as JS).

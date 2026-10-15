@@ -8,6 +8,14 @@ using System.Text.Json;
 
 namespace TypeSafe.AI.Sdk.Tests;
 
+internal sealed class CapturedPart
+{
+    public required string Name { get; init; }
+    public string? FileName { get; init; }
+    public string? ContentType { get; init; }
+    public required byte[] Bytes { get; init; }
+}
+
 internal sealed class RecordedRequest
 {
     public required HttpRequestMessage Message { get; init; }
@@ -16,6 +24,8 @@ internal sealed class RecordedRequest
     public required string? BodyText { get; init; }
     public JsonElement? Body { get; init; }
     public Dictionary<string, string> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public List<CapturedPart> Parts { get; } = new();
+    public bool IsMultipart => Parts.Count > 0;
 }
 
 internal sealed class ScriptedHandler : HttpMessageHandler
@@ -108,8 +118,33 @@ internal sealed class ScriptedHandler : HttpMessageHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var bodyText = request.Content is null ? null : await request.Content.ReadAsStringAsync().ConfigureAwait(false);
+        string? bodyText = null;
         JsonElement? body = null;
+        var parts = new List<CapturedPart>();
+        if (request.Content is MultipartFormDataContent multipart)
+        {
+            foreach (var part in multipart)
+            {
+                var disposition = part.Headers.ContentDisposition;
+                var captured = new CapturedPart
+                {
+                    Name = Unquote(disposition?.Name) ?? "",
+                    FileName = Unquote(disposition?.FileName),
+                    ContentType = part.Headers.ContentType?.MediaType,
+                    Bytes = await part.ReadAsByteArrayAsync().ConfigureAwait(false),
+                };
+                parts.Add(captured);
+                if (captured.Name == "request")
+                {
+                    bodyText = Encoding.UTF8.GetString(captured.Bytes);
+                }
+            }
+        }
+        else if (request.Content is not null)
+        {
+            bodyText = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
+        }
+
         if (!string.IsNullOrEmpty(bodyText))
         {
             try
@@ -130,6 +165,7 @@ internal sealed class ScriptedHandler : HttpMessageHandler
             BodyText = bodyText,
             Body = body,
         };
+        recorded.Parts.AddRange(parts);
         foreach (var header in request.Headers)
         {
             recorded.Headers[header.Key] = string.Join(",", header.Value);
@@ -145,6 +181,21 @@ internal sealed class ScriptedHandler : HttpMessageHandler
 
         Requests.Add(recorded);
         return await _respond(recorded, Requests.Count, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static string? Unquote(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        if (value.Length >= 2 && value[0] == '"' && value[^1] == '"')
+        {
+            return value[1..^1];
+        }
+
+        return value;
     }
 
     private static bool LooksLikeJson(string text)

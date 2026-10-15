@@ -246,63 +246,63 @@ public sealed class ScoreQuestion : Question
 
 internal static class QuestionWire
 {
-    public static JsonObject ToJson(Question question)
+    public static JsonObject ToJson(Question question, AssetWriteContext? assets = null)
     {
         var node = new JsonObject { ["type"] = question.Type };
         if (question.IncludeInstructions)
         {
-            node["instructions"] = JsonValues.ToNode(question.Instructions);
+            node["instructions"] = JsonValues.ToNode(question.Instructions, assets);
         }
 
         switch (question)
         {
             case NoulQuestion noul when noul.IncludeCriteria:
-                node["criteria"] = noul.Criteria is null ? null : ToNoulCriteria(noul.Criteria);
+                node["criteria"] = noul.Criteria is null ? null : ToNoulCriteria(noul.Criteria, assets);
                 break;
             case ChoiceQuestion choice:
-                node["criteria"] = ToObject(choice.Criteria);
+                node["criteria"] = ToObject(choice.Criteria, assets);
                 break;
             case ScoreQuestion score:
-                node["criteria"] = ToArray(score.Criteria);
+                node["criteria"] = ToArray(score.Criteria, assets);
                 break;
         }
 
         return node;
     }
 
-    private static JsonObject ToNoulCriteria(NoulCriteria criteria)
+    private static JsonObject ToNoulCriteria(NoulCriteria criteria, AssetWriteContext? assets)
     {
         var node = new JsonObject();
         if (criteria.IncludeTrue)
         {
-            node["true"] = JsonValues.ToNode(criteria.True);
+            node["true"] = JsonValues.ToNode(criteria.True, assets);
         }
 
         if (criteria.IncludeFalse)
         {
-            node["false"] = JsonValues.ToNode(criteria.False);
+            node["false"] = JsonValues.ToNode(criteria.False, assets);
         }
 
         return node;
     }
 
-    private static JsonObject ToObject(IReadOnlyDictionary<string, object?> values)
+    private static JsonObject ToObject(IReadOnlyDictionary<string, object?> values, AssetWriteContext? assets)
     {
         var node = new JsonObject();
         foreach (var pair in values)
         {
-            node[pair.Key] = JsonValues.ToNode(pair.Value);
+            node[pair.Key] = JsonValues.ToNode(pair.Value, assets);
         }
 
         return node;
     }
 
-    private static JsonArray ToArray(IReadOnlyList<object?> values)
+    private static JsonArray ToArray(IReadOnlyList<object?> values, AssetWriteContext? assets)
     {
         var node = new JsonArray();
         foreach (var value in values)
         {
-            node.Add(JsonValues.ToNode(value));
+            node.Add(JsonValues.ToNode(value, assets));
         }
 
         return node;

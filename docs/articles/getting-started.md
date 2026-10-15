@@ -46,5 +46,6 @@ dotnet run --project samples/TypeSafe.AI.Sdk.Sample
 ## See also
 
 - [Questions](questions.md)
+- [Images](images.md)
 - [Configuration](configuration.md)
 - <xref:TypeSafe.AI.Sdk.TypeSafeClient>

@@ -65,6 +65,22 @@ var urgency = result.GetScore("urgency");
 
 `instructions` and criteria values may be strings, objects, arrays, or `null` (structured questions). See https://docs.typesafe.ai/primitives/advanced.md.
 
+## Images (experimental)
+
+PNG/JPEG only. JS `image()` → `new Image(byte[] | ReadOnlyMemory<byte> | Stream)`; `Image.fromBase64` → `Image.FromBase64`. Each image has a unique `<image:{32 hex}>` reference (`ToString()`).
+
+The JS SDK does **not** auto-set `TypeSafe-Danger-Zone-Images`. Opt in via `DefaultHeaders` or `RequestOptions.Headers`.
+
+Three ways to attach (combinable):
+
+1. Put `Image` in `state` / instructions / criteria — sent under its generated reference.
+2. `WithAssets.Format($"… {photo} …")` or `WithAssets.Join(images, ", ")` — C# has no tagged templates. A plain `$"… {photo}"` does **not** attach; missing references throw `TypeSafeException` before send.
+3. `SystemOneRequest.Assets` — caller-chosen names that must appear in the JSON; unused names throw.
+
+Requests with images are `multipart/form-data` (`request` JSON part, then `asset-N` file parts). Bytes are copied at serialize time.
+
+Do not implement `box` questions unless asked; they are a separate upstream port.
+
 ## Client, env, retries
 
 Environment (empty/whitespace ignored; constructor wins):

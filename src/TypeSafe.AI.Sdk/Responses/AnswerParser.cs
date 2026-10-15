@@ -142,33 +142,36 @@ internal static class AnswerParser
         throw new TypeSafeException($"Unexpected response shape from {endpoint}; expected a JSON object.");
     }
 
-    public static JsonObject BuildSystemOnePayload(SystemOneRequest request, string defaultModel)
+    public static JsonObject BuildSystemOnePayload(
+        SystemOneRequest request,
+        string defaultModel,
+        AssetWriteContext? assets = null)
     {
         Question.Validate(new Dictionary<string, Question>(request.Questions));
         var payload = new JsonObject
         {
-            ["state"] = JsonValues.ToNode(request.State),
+            ["state"] = JsonValues.ToNode(request.State, assets),
             ["model"] = request.Model ?? defaultModel,
-            ["questions"] = BuildQuestions(request.Questions),
+            ["questions"] = BuildQuestions(request.Questions, assets),
         };
 
         if (request.Extra is not null)
         {
             foreach (var pair in request.Extra)
             {
-                payload[pair.Key] = JsonValues.ToNode(pair.Value);
+                payload[pair.Key] = JsonValues.ToNode(pair.Value, assets);
             }
         }
 
         return payload;
     }
 
-    private static JsonObject BuildQuestions(IDictionary<string, Question> questions)
+    private static JsonObject BuildQuestions(IDictionary<string, Question> questions, AssetWriteContext? assets)
     {
         var node = new JsonObject();
         foreach (var pair in questions)
         {
-            node[pair.Key] = QuestionWire.ToJson(pair.Value);
+            node[pair.Key] = QuestionWire.ToJson(pair.Value, assets);
         }
 
         return node;

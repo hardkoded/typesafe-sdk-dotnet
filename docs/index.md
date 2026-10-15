@@ -31,6 +31,7 @@ Console.WriteLine(response.GetChoice("category").Choice);
 
 - [Getting started](articles/getting-started.md) — install, env vars, first request
 - [Questions](articles/questions.md) — Choice, Score, and Noul
+- [Images](articles/images.md) — PNG/JPEG assets, `WithAssets`, named `Assets`
 - [Configuration](articles/configuration.md) — options, retries, timeouts
 - [API reference](xref:TypeSafe.AI.Sdk) — generated from the library
 

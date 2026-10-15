@@ -6,7 +6,7 @@ namespace TypeSafe.AI.Sdk;
 /// <summary>State and named questions for <see cref="TypeSafeClient.SystemOneAsync(SystemOneRequest, RequestOptions?, CancellationToken)"/>.</summary>
 public sealed class SystemOneRequest
 {
-    /// <summary>Text, a JSON object or array, or <c>null</c> to evaluate.</summary>
+    /// <summary>Text, an <see cref="Image"/>, a JSON object or array, or <c>null</c> to evaluate.</summary>
     public object? State { get; set; }
 
     /// <summary>Nonempty questions keyed by the names used to identify their answers.</summary>
@@ -14,6 +14,19 @@ public sealed class SystemOneRequest
 
     /// <summary>Model override; omitted values inherit the client <c>defaultModel</c>.</summary>
     public string? Model { get; set; }
+
+    /// <summary>
+    /// References mapped to images, for referencing assets by a name of your choosing.
+    /// Mirrors JS <c>assets</c>.
+    /// </summary>
+    /// <remarks>
+    /// Names are matched literally in string values within <see cref="State"/>, question
+    /// instructions, or criteria. Use distinct delimiters (such as <c>&lt;name&gt;</c>) to avoid
+    /// matching ordinary text. Assets placed directly in state or question content, or in
+    /// <see cref="WithAssets"/> text, are sent without being listed here. Every name must appear
+    /// in the request; otherwise the call rejects before sending.
+    /// </remarks>
+    public IDictionary<string, Image>? Assets { get; set; }
 
     /// <summary>
     /// Additional properties forwarded on the wire, including <c>null</c> values.

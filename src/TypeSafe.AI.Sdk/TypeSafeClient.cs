@@ -4,7 +4,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json.Nodes;
 
 namespace TypeSafe.AI.Sdk;
@@ -121,7 +120,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var payload = AnswerParser.BuildSystemOnePayload(request, DefaultModel);
+        var payload = AssetSerialization.PrepareSystemOne(request, DefaultModel);
         return await SendAsync(
             HttpMethod.Post,
             "/v1/systemone",
@@ -137,7 +136,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var payload = AnswerParser.BuildSystemOnePayload(request, DefaultModel);
+        var payload = AssetSerialization.PrepareSystemOne(request, DefaultModel);
         return SendWithResponseAsync(
             HttpMethod.Post,
             "/v1/systemone",
@@ -180,7 +179,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
     internal async Task<T> SendAsync<T>(
         HttpMethod method,
         string path,
-        JsonNode? body,
+        PreparedHttpBody? body,
         RequestOptions? options,
         CancellationToken cancellationToken,
         Func<object?, T> parse)
@@ -192,7 +191,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
     internal async Task<TypeSafeResponse<T>> SendWithResponseAsync<T>(
         HttpMethod method,
         string path,
-        JsonNode? body,
+        PreparedHttpBody? body,
         RequestOptions? options,
         CancellationToken cancellationToken,
         Func<object?, T> parse) =>
@@ -201,7 +200,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
     private async Task<TypeSafeResponse<T>> SendCoreAsync<T>(
         HttpMethod method,
         string path,
-        JsonNode? body,
+        PreparedHttpBody? body,
         RequestOptions? options,
         CancellationToken cancellationToken,
         Func<object?, T> parse)
@@ -221,7 +220,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         var headers = MergeHeaders(_defaultHeaders, options.Headers);
         var tag = $"#{Interlocked.Increment(ref _requestCount)} {method.Method} {path}";
         var url = BaseUrl + path;
-        var json = body?.ToJsonString(JsonValues.SerializerOptions);
+        var json = body?.Json;
 
         HttpResponseMessage? response = null;
         object? parsedBody = null;
@@ -231,7 +230,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             var retriesLeft = retry.MaxRetries - attempt;
             try
             {
-                var attemptResult = await AttemptAsync(tag, url, method, json, headers, attempt, timeout, token).ConfigureAwait(false);
+                var attemptResult = await AttemptAsync(tag, url, method, body, headers, attempt, timeout, token).ConfigureAwait(false);
                 response = attemptResult.Response;
                 responseElapsedMs = attemptResult.ElapsedMs;
             }
@@ -281,7 +280,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         string tag,
         string url,
         HttpMethod method,
-        string? json,
+        PreparedHttpBody? body,
         IReadOnlyDictionary<string, string> userHeaders,
         int attempt,
         int timeout,
@@ -291,7 +290,9 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         attemptCts.CancelAfter(timeout);
 
         using var request = new HttpRequestMessage(method, url);
-        foreach (var header in BuildHeaders(userHeaders, json is not null, attempt))
+        var hasBody = body is not null;
+        var multipart = body?.HasAssets == true;
+        foreach (var header in BuildHeaders(userHeaders, hasBody, multipart, attempt))
         {
             if (header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
             {
@@ -301,15 +302,15 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             request.Headers.TryAddWithoutValidation(header.Key, header.Value);
         }
 
-        if (json is not null)
+        if (body is not null)
         {
-            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            request.Content = body.CreateContent();
         }
 
         Logger.Debug($"{tag} -> {url}", new
         {
-            headers = HeaderRedactor.Redact(BuildHeaders(userHeaders, json is not null, attempt)),
-            body = json is null ? null : JsonNode.Parse(json),
+            headers = HeaderRedactor.Redact(BuildHeaders(userHeaders, hasBody, multipart, attempt)),
+            body = body is null ? null : JsonNode.Parse(body.Json),
         });
 
         var started = Stopwatch.StartNew();
@@ -363,7 +364,11 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         }
     }
 
-    private Dictionary<string, string> BuildHeaders(IReadOnlyDictionary<string, string> userHeaders, bool hasBody, int attempt)
+    private Dictionary<string, string> BuildHeaders(
+        IReadOnlyDictionary<string, string> userHeaders,
+        bool hasBody,
+        bool multipart,
+        int attempt)
     {
         var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in userHeaders)
@@ -377,7 +382,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         headers["User-Agent"] = $"typesafe-sdk-dotnet/{SdkVersion.Current}";
         headers["X-TypeSafe-SDK"] = $"typesafe-sdk-dotnet/{SdkVersion.Current}";
         headers["X-TypeSafe-Runtime"] = RuntimeInfo.Description;
-        if (hasBody)
+        if (hasBody && !multipart)
         {
             headers["Content-Type"] = "application/json";
         }
