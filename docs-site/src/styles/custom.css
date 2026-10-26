@@ -1,0 +1,43 @@
+:root {
+    --sl-font: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --sl-font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    /* Gold accent from the previous DocFX theme (docs/templates/custom/public/main.css). */
+    --sl-color-accent-low: #3a2c08;
+    --sl-color-accent: #e3a008;
+    --sl-color-accent-high: #f8e7b4;
+    --sl-content-width: 48rem;
+}
+
+:root[data-theme="light"] {
+    --sl-color-accent-low: #f8edd4;
+    --sl-color-accent: #b87d06;
+    --sl-color-accent-high: #4a3204;
+    --sl-color-gray-6: #faf6ee;
+    --sl-color-gray-7: #fffdf8;
+    --sl-color-black: #ffffff;
+}
+
+/* The current sidebar item uses the gold accent. Dark ink keeps the label readable on that fill. */
+.sidebar-content a[aria-current="page"],
+.sidebar-content a[aria-current="page"]:hover,
+.sidebar-content a[aria-current="page"]:focus {
+    background-color: #e3a008;
+    color: #1a1406;
+}
+
+:root[data-theme="light"] .sidebar-content a[aria-current="page"],
+:root[data-theme="light"] .sidebar-content a[aria-current="page"]:hover,
+:root[data-theme="light"] .sidebar-content a[aria-current="page"]:focus {
+    background-color: #b87d06;
+    color: #1a1406;
+}
+
+.sl-markdown-content a {
+    text-underline-offset: 0.15em;
+}
+
+.typesafe-disclaimer {
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-xs);
+    margin: 0.75rem 0 0;
+}

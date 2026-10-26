@@ -47,10 +47,17 @@ coverage.xml
 *.coveragexml
 .dotnet/
 
-## DocFX
-docs/_site/
-docs/api/.manifest
-docs/api/*.yml
-!docs/api/index.md
-docs/obj/
+## Docs site
+docs-site/node_modules/
+docs-site/dist/
+docs-site/.astro/
+docs-site/.api-yaml/
+docs-site/.redirect-staging/
+docs-site/src/content/docs/.api-staging/
+docs-site/src/content/docs/getting-started.md
+docs-site/src/content/docs/questions.md
+docs-site/src/content/docs/images.md
+docs-site/src/content/docs/configuration.md
+docs-site/src/content/docs/dependency-injection.md
+docs-site/src/content/docs/errors.md
 log.txt
