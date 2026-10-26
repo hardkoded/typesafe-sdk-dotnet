@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "..",
+          "files": ["src/TypeSafe.AI.Sdk/TypeSafe.AI.Sdk.csproj"]
+        }
+      ],
+      "dest": ".api-yaml",
+      "filter": "filterConfig.yml",
+      "includePrivateMembers": false,
+      "disableDefaultFilter": false,
+      "memberLayout": "samePage",
+      "properties": {
+        "TargetFramework": "net10.0"
+      }
+    }
+  ]
+}

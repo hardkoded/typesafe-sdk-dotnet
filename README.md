@@ -88,7 +88,7 @@ var response = await client.SystemOneAsync(new SystemOneRequest
 var box = response.GetBox("damage").Box;
 ```
 
-Requests with images are sent as `multipart/form-data`. An image in a plain interpolated string, or a name in `Assets` that the request never uses, throws a `TypeSafeException` before sending. See [Images](docs/articles/images.md).
+Requests with images are sent as `multipart/form-data`. An image in a plain interpolated string, or a name in `Assets` that the request never uses, throws a `TypeSafeException` before sending. See [Images](https://hardkoded.github.io/typesafe-sdk-dotnet/images/).
 
 ## Configuration
 
@@ -174,7 +174,7 @@ dotnet run --project samples/TypeSafe.AI.Sdk.WallySample -- scene.png character.
 
 - TypeSafe concepts and HTTP API: https://docs.typesafe.ai/sdk · https://docs.typesafe.ai/api.md
 - JavaScript SDK (parity source): https://github.com/typesafe-ai/typesafe-sdk-js
-- This port: [docs site](https://hardkoded.github.io/typesafe-sdk-dotnet/) (DocFX) · [CONTRIBUTING.md](CONTRIBUTING.md) · [agent skill](skills/typesafe-dotnet/SKILL.md)
+- This port: [docs site](https://hardkoded.github.io/typesafe-sdk-dotnet/) · [CONTRIBUTING.md](CONTRIBUTING.md) · [agent skill](skills/typesafe-dotnet/SKILL.md)
 
-Build the docs site locally with `dotnet tool update -g docfx && docfx docs/docfx.json --serve`.
+Preview the docs site locally with `cd docs-site && npm ci && npm run api && npm run dev`, then open http://localhost:4321/typesafe-sdk-dotnet/ .
 

@@ -1,0 +1,14 @@
+[
+  {
+    "label": "Overview",
+    "slug": "api"
+  },
+  {
+    "label": "TypeSafe.AI.Sdk",
+    "slug": "api/TypeSafe.AI.Sdk"
+  },
+  {
+    "label": "TypeSafe.AI.Sdk.DependencyInjection",
+    "slug": "api/TypeSafe.AI.Sdk.DependencyInjection"
+  }
+]
