@@ -32,6 +32,12 @@
     color: #1a1406;
 }
 
+.site-title img {
+    border-radius: 0.45rem;
+    height: 1.85rem;
+    width: auto;
+}
+
 .sl-markdown-content a {
     text-underline-offset: 0.15em;
 }

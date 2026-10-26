@@ -21,6 +21,11 @@ export default defineConfig({
             title: "TypeSafe.AI.Sdk",
             description:
                 "Community .NET client for TypeSafe AI. Port of @typesafe-ai/sdk. Not an official TypeSafe product.",
+            logo: {
+                src: "./src/assets/logo.png",
+                alt: "Hardkoded",
+            },
+            favicon: "/favicon.png",
             customCss: [
                 "@fontsource/inter/400.css",
                 "@fontsource/inter/500.css",
