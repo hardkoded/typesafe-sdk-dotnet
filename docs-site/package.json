@@ -13,7 +13,7 @@
     "prebuild": "node scripts/sync-guides.mjs",
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/mount-base.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
