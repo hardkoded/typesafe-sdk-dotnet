@@ -1,6 +1,6 @@
 # TypeSafe.AI.Sdk docs
 
-The documentation site is [Astro Starlight](https://starlight.astro.build/). The published site is [https://hardkoded.github.io/typesafe-sdk-dotnet/](https://hardkoded.github.io/typesafe-sdk-dotnet/).
+The documentation site is [Astro Starlight](https://starlight.astro.build/). The published site is [https://www.hardkoded.com/typesafe-sdk-dotnet/](https://www.hardkoded.com/typesafe-sdk-dotnet/).
 
 ## Preview locally
 
@@ -12,7 +12,7 @@ npm run api
 npm run dev
 ```
 
-Open http://localhost:4321/typesafe-sdk-dotnet/ . The path includes `/typesafe-sdk-dotnet/` because that is the GitHub Pages project-site base.
+Open http://localhost:4321/typesafe-sdk-dotnet/ . The path includes `/typesafe-sdk-dotnet/` because that is the base path on https://www.hardkoded.com/typesafe-sdk-dotnet/.
 
 `npm run dev` and `npm run build` copy `guides/` into the site before Astro starts. Edit the guides in `guides/`. The copies under `src/content/docs/` are generated.
 
@@ -41,6 +41,6 @@ The Vercel project root is this directory. Astro writes the site to `dist/` with
 
 ## GitHub Pages
 
-`.github/workflows/docs.yml` builds this site on every pull request and on every push to `main`. It deploys only from a push to `main`. Merging the docs change is what publishes it. The workflow does not change the repository's Pages source setting.
+GitHub Pages is retired. `.github/workflows/docs.yml` builds this site on every pull request and on every push to `main`, and uploads `docs-site/dist` as a CI artifact. It does not deploy. Vercel is the host: its Git integration publishes the site on a push to `main`.
 
 Old DocFX `.html` URLs redirect to the new paths. Member anchors from DocFX (`#TypeSafe_AI_Sdk_TypeSafeClient_...`) are kept on the generated pages. A redirect preserves the hash when JavaScript runs.

@@ -10,9 +10,9 @@ This repo is a community .NET port of [`typesafe-ai/typesafe-sdk-js`](https://gi
 | `tests/TypeSafe.AI.Sdk.Tests` | Unit tests (mocked HTTP) |
 | `tests/TypeSafe.AI.Sdk.IntegrationTests` | Live API; skip without `TYPESAFE_API_KEY` |
 | `samples/TypeSafe.AI.Sdk.Sample` | Console Choice + Noul |
-| `docs-site/` | Starlight docs site (GitHub Pages) |
+| `docs-site/` | Starlight docs site (https://www.hardkoded.com/typesafe-sdk-dotnet/) |
 | `skills/typesafe-dotnet/` | Agent skill |
-| `.github/workflows/` | CI, NuGet publish, Pages |
+| `.github/workflows/` | CI, NuGet publish, docs build |
 
 ## Development
 
@@ -52,7 +52,7 @@ Do not commit API keys or `.env` files.
 
 ## GitHub Pages
 
-`docs.yml` builds the Starlight site in `docs-site/` on every pull request and on every push. It deploys `docs-site/dist` only on a push to `main`. In the repo: **Settings → Pages → Source: GitHub Actions**. The site URL is `https://hardkoded.github.io/typesafe-sdk-dotnet/`.
+GitHub Pages is retired. `docs.yml` builds the Starlight site in `docs-site/` on every pull request and on every push, and uploads the build as a CI artifact. It does not deploy. Vercel Git integration publishes the site on a push to `main`. The site URL is `https://www.hardkoded.com/typesafe-sdk-dotnet/`.
 
 ```bash
 cd docs-site
