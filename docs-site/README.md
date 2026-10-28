@@ -35,6 +35,10 @@ That needs the .NET 10 SDK. It restores the local DocFX tool (`dotnet-tools.json
 
 `npm run api -- --skip-metadata` rebuilds the Markdown from `docs-site/.api-yaml` without running DocFX again.
 
+## Vercel
+
+The Vercel project root is this directory. Astro writes the site to `dist/` without the `/typesafe-sdk-dotnet` prefix, and the HTML still links to that prefix. On Vercel, `scripts/mount-base.mjs` copies the build under that prefix, and `vercel.json` rewrites the same prefix onto the root files (including `index.html` for each page). Those URLs then resolve on the Vercel deployment and behind the hardkoded.com multi-zone.
+
 ## GitHub Pages
 
 `.github/workflows/docs.yml` builds this site on every pull request and on every push to `main`. It deploys only from a push to `main`. Merging the docs change is what publishes it. The workflow does not change the repository's Pages source setting.

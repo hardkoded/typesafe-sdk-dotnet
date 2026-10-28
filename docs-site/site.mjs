@@ -1,3 +1,3 @@
-/** GitHub Pages project site. `base` is also read by the remark plugin and the redirect pages. */
-export const siteOrigin = "https://hardkoded.github.io";
+/** Canonical origin. GitHub Pages mounts the build at `base`. Vercel also copies it there (`scripts/mount-base.mjs`) and rewrites `base` in vercel.json. */
+export const siteOrigin = "https://www.hardkoded.com";
 export const siteBase = "/typesafe-sdk-dotnet";
