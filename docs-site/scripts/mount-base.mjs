@@ -5,7 +5,7 @@ import { siteBase } from "../site.mjs";
 
 // GitHub Pages mounts dist/ at `base`. Vercel serves dist/ at `/`, so the same
 // URLs 404 unless the files also exist under that prefix. Rewrites cover the
-// rest; see vercel.json.
+// rest; see middleware.ts.
 if (!process.env.VERCEL) {
     console.log("Skipping base mount (not a Vercel build).");
 } else {

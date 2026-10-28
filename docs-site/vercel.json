@@ -10,23 +10,5 @@
         }
       ]
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/typesafe-sdk-dotnet",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/typesafe-sdk-dotnet/",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/typesafe-sdk-dotnet/:path*/",
-      "destination": "/:path*/index.html"
-    },
-    {
-      "source": "/typesafe-sdk-dotnet/:path*",
-      "destination": "/:path*"
-    }
   ]
 }

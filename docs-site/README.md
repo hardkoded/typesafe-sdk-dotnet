@@ -37,7 +37,7 @@ That needs the .NET 10 SDK. It restores the local DocFX tool (`dotnet-tools.json
 
 ## Vercel
 
-The Vercel project root is this directory. Astro writes the site to `dist/` without the `/typesafe-sdk-dotnet` prefix, and the HTML still links to that prefix. On Vercel, `scripts/mount-base.mjs` copies the build under that prefix, and `vercel.json` rewrites the same prefix onto the root files (including `index.html` for each page). Those URLs then resolve on the Vercel deployment and behind the hardkoded.com multi-zone.
+The Vercel project root is this directory. Astro writes the site to `dist/` without the `/typesafe-sdk-dotnet` prefix, and the HTML still links to that prefix. On Vercel, `scripts/mount-base.mjs` copies the build under that prefix, and `middleware.ts` rewrites the same prefix onto the root files (including `index.html` for each page). Those URLs then resolve on the Vercel deployment and behind the hardkoded.com multi-zone.
 
 ## GitHub Pages
 
