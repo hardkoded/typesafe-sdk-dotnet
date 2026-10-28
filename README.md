@@ -8,7 +8,7 @@ This is **not** an official TypeSafe product and is not endorsed by TypeSafe. Be
 [![NuGet](https://img.shields.io/nuget/v/TypeSafe.AI.Sdk.svg)](https://www.nuget.org/packages/TypeSafe.AI.Sdk)
 
 **Package id:** `TypeSafe.AI.Sdk`  
-**Docs site:** https://hardkoded.github.io/typesafe-sdk-dotnet/
+**Docs site:** https://www.hardkoded.com/typesafe-sdk-dotnet/
 
 ## Install
 
@@ -88,7 +88,7 @@ var response = await client.SystemOneAsync(new SystemOneRequest
 var box = response.GetBox("damage").Box;
 ```
 
-Requests with images are sent as `multipart/form-data`. An image in a plain interpolated string, or a name in `Assets` that the request never uses, throws a `TypeSafeException` before sending. See [Images](https://hardkoded.github.io/typesafe-sdk-dotnet/images/).
+Requests with images are sent as `multipart/form-data`. An image in a plain interpolated string, or a name in `Assets` that the request never uses, throws a `TypeSafeException` before sending. See [Images](https://www.hardkoded.com/typesafe-sdk-dotnet/images/).
 
 ## Configuration
 
@@ -174,7 +174,7 @@ dotnet run --project samples/TypeSafe.AI.Sdk.WallySample -- scene.png character.
 
 - TypeSafe concepts and HTTP API: https://docs.typesafe.ai/sdk · https://docs.typesafe.ai/api.md
 - JavaScript SDK (parity source): https://github.com/typesafe-ai/typesafe-sdk-js
-- This port: [docs site](https://hardkoded.github.io/typesafe-sdk-dotnet/) · [CONTRIBUTING.md](CONTRIBUTING.md) · [agent skill](skills/typesafe-dotnet/SKILL.md)
+- This port: [docs site](https://www.hardkoded.com/typesafe-sdk-dotnet/) · [CONTRIBUTING.md](CONTRIBUTING.md) · [agent skill](skills/typesafe-dotnet/SKILL.md)
 
 Preview the docs site locally with `cd docs-site && npm ci && npm run api && npm run dev`, then open http://localhost:4321/typesafe-sdk-dotnet/ .
 
