@@ -62,9 +62,11 @@ const pages = [
 const pageTargets = new Map(pages.map((page) => [path.posix.basename(page.source), page.target]));
 
 const sectionRedirects = [
-    ["toc.html", "/"],
-    ["articles/toc.html", "/"],
-    ["README.html", "/"],
+    // Old DocFX table of contents and README pointed at the Starlight home.
+    // The site root is the marketing page. Those URLs land on the docs home.
+    ["toc.html", "/docs/"],
+    ["articles/toc.html", "/docs/"],
+    ["README.html", "/docs/"],
 ];
 
 await mkdir(contentDir, { recursive: true });

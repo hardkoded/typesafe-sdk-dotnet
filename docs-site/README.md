@@ -1,6 +1,6 @@
 # TypeSafe.AI.Sdk docs
 
-The documentation site is [Astro Starlight](https://starlight.astro.build/). The published site is [https://www.hardkoded.com/typesafe-sdk-dotnet/](https://www.hardkoded.com/typesafe-sdk-dotnet/).
+The documentation site is [Astro Starlight](https://starlight.astro.build/). The published site root is a dark marketing page at [https://www.hardkoded.com/typesafe-sdk-dotnet/](https://www.hardkoded.com/typesafe-sdk-dotnet/). Guides and the API reference start at [/docs/](https://www.hardkoded.com/typesafe-sdk-dotnet/docs/).
 
 ## Preview locally
 
@@ -12,7 +12,7 @@ npm run api
 npm run dev
 ```
 
-Open http://localhost:4321/typesafe-sdk-dotnet/ . The path includes `/typesafe-sdk-dotnet/` because that is the base path on https://www.hardkoded.com/typesafe-sdk-dotnet/.
+Open http://localhost:4321/typesafe-sdk-dotnet/ for the landing page, and http://localhost:4321/typesafe-sdk-dotnet/docs/ for the guides. The path includes `/typesafe-sdk-dotnet/` because that is the base path on https://www.hardkoded.com/typesafe-sdk-dotnet/. The landing page stays dark. Guide pages still follow the system color scheme.
 
 `npm run dev` and `npm run build` copy `guides/` into the site before Astro starts. Edit the guides in `guides/`. The copies under `src/content/docs/` are generated.
 

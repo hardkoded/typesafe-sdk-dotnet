@@ -50,7 +50,7 @@ export default defineConfig({
                 Footer: "./src/components/Footer.astro",
             },
             sidebar: [
-                { label: "Home", slug: "index" },
+                { label: "Docs", slug: "docs" },
                 {
                     label: "Guides",
                     items: [

@@ -176,5 +176,5 @@ dotnet run --project samples/TypeSafe.AI.Sdk.WallySample -- scene.png character.
 - JavaScript SDK (parity source): https://github.com/typesafe-ai/typesafe-sdk-js
 - This port: [docs site](https://www.hardkoded.com/typesafe-sdk-dotnet/) · [CONTRIBUTING.md](CONTRIBUTING.md) · [agent skill](skills/typesafe-dotnet/SKILL.md)
 
-Preview the docs site locally with `cd docs-site && npm ci && npm run api && npm run dev`, then open http://localhost:4321/typesafe-sdk-dotnet/ .
+Preview the docs site locally with `cd docs-site && npm ci && npm run api && npm run dev`, then open http://localhost:4321/typesafe-sdk-dotnet/ for the landing page and http://localhost:4321/typesafe-sdk-dotnet/docs/ for the guides.
 
