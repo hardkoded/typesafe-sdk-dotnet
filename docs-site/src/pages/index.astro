@@ -1,0 +1,357 @@
+---
+import "@fontsource-variable/figtree/wght.css";
+import "@fontsource/dm-mono/latin-400.css";
+import "@fontsource/dm-mono/latin-500.css";
+import logo from "../assets/logo.png";
+import { siteOrigin } from "../../site.mjs";
+import "../styles/landing.css";
+
+const base = import.meta.env.BASE_URL;
+const href = (path: string) => `${base}${path.replace(/^\//, "")}`;
+const canonical = new URL(base, siteOrigin).href;
+const repo = "https://github.com/hardkoded/typesafe-sdk-dotnet";
+const sponsor = "https://github.com/sponsors/hardkoded";
+const sampleUrl = `${repo}/blob/main/docs-site/guides/getting-started.md`;
+const install = "dotnet add package TypeSafe.AI.Sdk";
+const callSample = "using var client = new TypeSafeClient();";
+const answerSample = `Console.WriteLine(response.GetChoice("category").Choice);`;
+
+const description =
+    "Community .NET client for TypeSafe AI. Ask System One from C# and read Choice, Score, Noul, and Box answers.";
+
+// docs-site/guides/getting-started.md, the Quickstart sample. The calls match that guide
+// and the same document and Choice question in samples/TypeSafe.AI.Sdk.Sample/Program.cs.
+// Line breaks are only so each line fits the card.
+const sampleHtml = [
+    `<span class="k">using</span> TypeSafe.AI.Sdk;`,
+    ``,
+    `<span class="k">using</span> <span class="k">var</span> client = <span class="k">new</span> <span class="t">TypeSafeClient</span>();`,
+    `<span class="k">var</span> response = <span class="k">await</span> client.<span class="f">SystemOneAsync</span>(`,
+    `    <span class="k">new</span>`,
+    `    {`,
+    `        document = <span class="s">&quot;I was charged twice. Please fix this ASAP.&quot;</span>,`,
+    `    },`,
+    `    (`,
+    `        <span class="s">&quot;category&quot;</span>,`,
+    `        <span class="t">Question</span>.<span class="f">Choice</span>(`,
+    `            <span class="s">&quot;What is this ticket about?&quot;</span>,`,
+    `            (<span class="s">&quot;billing&quot;</span>, <span class="k">null</span>),`,
+    `            (<span class="s">&quot;technical&quot;</span>, <span class="k">null</span>),`,
+    `            (<span class="s">&quot;other&quot;</span>, <span class="k">null</span>))));`,
+    ``,
+    `<span class="t">Console</span>.<span class="f">WriteLine</span>(`,
+    `    response.<span class="f">GetChoice</span>(<span class="s">&quot;category&quot;</span>).Choice);`,
+].join("\n");
+---
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>TypeSafe SDK for .NET</title>
+        <meta name="description" content={description} />
+        <meta name="theme-color" content="#100e0a" />
+        <link rel="canonical" href={canonical} />
+        <link rel="icon" href={href("favicon.png")} />
+        <meta property="og:title" content="TypeSafe SDK for .NET" />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:type" content="website" />
+    </head>
+    <body>
+        <a class="skip" href="#content">Skip to content</a>
+        <header class="nav">
+            <div class="wrap nav-inner">
+                <div class="nav-start">
+                    <a class="brand" href={base}>
+                        <img src={logo.src} width={logo.width} height={logo.height} alt="" />
+                        <span>TypeSafe SDK <span class="brand-mark">for .NET</span></span>
+                    </a>
+                    <a class="nav-docs" href={href("docs/")}>Docs</a>
+                </div>
+                <div class="nav-links">
+                    <a class="icon-button" href={repo} aria-label="TypeSafe SDK for .NET on GitHub">
+                        <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.7 7.7 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path>
+                        </svg>
+                    </a>
+                    <a class="button button-ghost" href={sponsor}>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 20s-7-4.4-7-9.1C5 8 6.8 6.2 9.2 6.2c1.3 0 2.4.6 2.8 1.6.4-1 1.5-1.6 2.8-1.6C17.2 6.2 19 8 19 10.9 19 15.6 12 20 12 20Z"></path>
+                        </svg>
+                        Sponsor
+                    </a>
+                </div>
+                <a class="button button-primary nav-cta" href={href("getting-started/")}>
+                    Get started
+                    <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 8h10M9 4l4 4-4 4"></path>
+                    </svg>
+                </a>
+            </div>
+        </header>
+
+        <main id="content">
+            <section class="hero" aria-labelledby="hero-title">
+                <svg class="hero-art" viewBox="0 0 1400 780" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                    <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M0 168h84l28 28h48"></path>
+                        <path d="M0 592h72l40-40h52"></path>
+                        <path d="M1224 112h72l44 44h60"></path>
+                        <path d="M1216 668h80l32-32h72"></path>
+                    </g>
+                    <g fill="none" stroke="currentColor" stroke-width="1.25">
+                        <circle cx="0" cy="168" r="5"></circle>
+                        <circle cx="160" cy="196" r="5"></circle>
+                        <circle cx="0" cy="592" r="5"></circle>
+                        <circle cx="164" cy="552" r="5"></circle>
+                        <circle cx="1224" cy="112" r="5"></circle>
+                        <circle cx="1400" cy="156" r="5"></circle>
+                        <circle cx="1216" cy="668" r="5"></circle>
+                        <circle cx="1400" cy="636" r="5"></circle>
+                    </g>
+                </svg>
+                <div class="wrap hero-grid">
+                    <div>
+                        <p class="eyebrow">TypeSafe SDK for .NET</p>
+                        <h1 id="hero-title">Structured answers<br />from C#.</h1>
+                        <p class="lede">
+                            TypeSafe System One turns application state into Choice, Score, Noul, and Box answers.
+                            One NuGet package. The same questions as the JavaScript SDK.
+                        </p>
+                        <p class="fineprint">
+                            Community port of <a href="https://github.com/typesafe-ai/typesafe-sdk-js">@typesafe-ai/sdk</a> by Dario Kondratiuk.
+                            Not an official TypeSafe product.
+                        </p>
+                        <div class="hero-actions">
+                            <a class="button button-primary" href={href("getting-started/")}>
+                                Get started
+                                <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 8h10M9 4l4 4-4 4"></path>
+                                </svg>
+                            </a>
+                            <a class="button button-ghost" href={repo}>
+                                <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+                                    <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"></path>
+                                </svg>
+                                Star on GitHub
+                            </a>
+                        </div>
+                        <div class="install">
+                            <span class="prompt" aria-hidden="true">$</span>
+                            <code>{install}</code>
+                            <button type="button" class="copy" data-copy={install} aria-live="polite">Copy</button>
+                        </div>
+                        <p class="install-note">
+                            One package. It targets <code>net10.0</code> and <code>netstandard2.0</code>.
+                            <a href="https://www.nuget.org/packages/TypeSafe.AI.Sdk">TypeSafe.AI.Sdk on NuGet</a>.
+                        </p>
+                    </div>
+
+                    <figure class="code-card">
+                        <figcaption class="code-bar">
+                            <span class="code-file">
+                                <span class="lang-badge">C#</span>
+                                Quickstart
+                            </span>
+                            <span class="code-status">
+                                <span class="live-dot" aria-hidden="true"></span>
+                                <a href={sampleUrl}>Guide source</a>
+                            </span>
+                        </figcaption>
+                        <pre><code set:html={sampleHtml} /></pre>
+                        <div class="code-foot">
+                            <span>TypeSafeClient reads TYPESAFE_API_KEY</span>
+                        </div>
+                    </figure>
+                </div>
+            </section>
+
+            <section class="band" aria-label="Project facts">
+                <div class="wrap band-grid">
+                    <div class="band-item">
+                        <p class="band-kicker">Package</p>
+                        <h2>TypeSafe.AI.Sdk</h2>
+                        <p>NuGet package id</p>
+                    </div>
+                    <div class="band-item">
+                        <p class="band-kicker">Targets</p>
+                        <h2>net10.0</h2>
+                        <p>and netstandard2.0</p>
+                    </div>
+                    <div class="band-item">
+                        <p class="band-kicker">Default model</p>
+                        <h2>jev-latest</h2>
+                        <p>TYPESAFE_DEFAULT_MODEL</p>
+                    </div>
+                    <div class="band-item">
+                        <p class="band-kicker">License</p>
+                        <h2>MIT</h2>
+                        <p>Free for commercial use</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" aria-labelledby="features-title">
+                <div class="wrap">
+                    <div class="section-head">
+                        <p class="eyebrow">Why this SDK</p>
+                        <h2 id="features-title">The same System One questions, in the C# you already write.</h2>
+                    </div>
+                    <ul class="features">
+                        <li class="feature">
+                            <span class="feature-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M12 5V3M12 21v-2M5 12H3M21 12h-2M6.2 6.2 4.8 4.8M19.2 19.2l-1.4-1.4M17.8 6.2l1.4-1.4M4.8 19.2l1.4-1.4"></path>
+                                </svg>
+                            </span>
+                            <h3>Choice, Score, Noul, and Box</h3>
+                            <p>
+                                <code>Question.Choice</code>, <code>Question.Score</code>, <code>Question.Noul</code>, and <code>Question.Box</code>.
+                                Read them back with <code>GetChoice</code>, <code>GetScore</code>, <code>GetNoul</code>, and <code>GetBox</code>.
+                            </p>
+                            <a class="more" href={href("questions/")}>
+                                Questions
+                                <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+                            </a>
+                        </li>
+                        <li class="feature">
+                            <span class="feature-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M8 8h8v8H8z"></path>
+                                    <path d="M4 9V5h4M15 5h4v4M19 15v4h-4M9 19H5v-4"></path>
+                                </svg>
+                            </span>
+                            <h3>Batch them in one call</h3>
+                            <p>
+                                Independent questions go in one <code>SystemOneAsync</code> call. The state is your own object, the same way the JavaScript SDK takes state.
+                            </p>
+                            <a class="more" href={href("getting-started/")}>
+                                Getting started
+                                <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+                            </a>
+                        </li>
+                        <li class="feature">
+                            <span class="feature-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M4 15c2-4 4-4 6 0s4 4 6 0 4-4 6 0"></path>
+                                    <path d="M4 9c2-4 4-4 6 0s4 4 6 0 4-4 6 0"></path>
+                                </svg>
+                            </span>
+                            <h3>Images, when you opt in</h3>
+                            <p>
+                                Experimental. PNG or JPEG, behind the <code>TypeSafe-Danger-Zone-Images</code> header.
+                                <code>Question.Box</code> locates a region with the <code>jev-preview</code> model.
+                            </p>
+                            <a class="more" href={href("images/")}>
+                                Images
+                                <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+                            </a>
+                        </li>
+                        <li class="feature">
+                            <span class="feature-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M8 4H5v15h14V8l-4-4H8z"></path>
+                                    <path d="M15 4v4h4M8 13h8M8 16h5"></path>
+                                </svg>
+                            </span>
+                            <h3>Retries, compression, and DI</h3>
+                            <p>
+                                Two retries by default, zstd on bodies of 1 KiB or more, and <a href={href("dependency-injection/")}><code>AddTypeSafeClient</code></a> for <code>IServiceCollection</code>.
+                            </p>
+                            <a class="more" href={href("configuration/")}>
+                                Configuration
+                                <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section steps-section" aria-labelledby="steps-title">
+                <div class="wrap steps-layout">
+                    <div class="steps-copy">
+                        <p class="eyebrow">Get started</p>
+                        <h2 id="steps-title">From an empty project to a typed answer, in three steps.</h2>
+                        <p class="lede">
+                            Install the package, call System One, then read the answer. Each step links to the page that has the rest.
+                        </p>
+                        <a class="button button-primary" href={href("getting-started/")}>
+                            Read the getting-started guide
+                            <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 8h10M9 4l4 4-4 4"></path>
+                            </svg>
+                        </a>
+                    </div>
+                    <ol class="steps">
+                        <li class="step">
+                            <span class="step-index" aria-hidden="true"></span>
+                            <div>
+                                <h3>Install the package</h3>
+                                <p>Add <code>TypeSafe.AI.Sdk</code> to a project that targets <code>net10.0</code> or <code>netstandard2.0</code>.</p>
+                                <pre class="chip"><code>{install}</code></pre>
+                                <a class="more" href={href("getting-started/")}>
+                                    Getting started
+                                    <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+                                </a>
+                            </div>
+                        </li>
+                        <li class="step">
+                            <span class="step-index" aria-hidden="true"></span>
+                            <div>
+                                <h3>Call System One</h3>
+                                <p><code>TypeSafeClient</code> reads <code>TYPESAFE_API_KEY</code>. Pass state and one or more questions to <code>SystemOneAsync</code>.</p>
+                                <pre class="chip"><code>{callSample}</code></pre>
+                                <a class="more" href={href("getting-started/")}>
+                                    Quickstart
+                                    <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+                                </a>
+                            </div>
+                        </li>
+                        <li class="step">
+                            <span class="step-index" aria-hidden="true"></span>
+                            <div>
+                                <h3>Read the answer</h3>
+                                <p>
+                                    <code>GetChoice</code> returns the label, probabilities, and confidence. Score, Noul, and Box have their own readers.
+                                </p>
+                                <pre class="chip"><code>{answerSample}</code></pre>
+                                <a class="more" href={href("questions/")}>
+                                    Questions
+                                    <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"></path></svg>
+                                </a>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div class="wrap">
+                <p><strong>TypeSafe SDK for .NET</strong></p>
+                <p>
+                    Community port of <a href="https://github.com/typesafe-ai/typesafe-sdk-js">@typesafe-ai/sdk</a>.
+                    Not an official TypeSafe product.
+                    <a href={`${repo}/blob/main/LICENSE`}>MIT</a>.
+                    Copyright (c) Dario Kondratiuk.
+                    Not affiliated with TypeSafe beyond being a client of the public API.
+                </p>
+                <nav class="footer-links" aria-label="Footer">
+                    <a href={href("docs/")}>Docs</a>
+                    <a href={href("getting-started/")}>Getting started</a>
+                    <a href={href("questions/")}>Questions</a>
+                    <a href={href("images/")}>Images</a>
+                    <a href={href("configuration/")}>Configuration</a>
+                    <a href={href("api/")}>API</a>
+                    <a href={repo}>GitHub</a>
+                    <a href={sponsor}>Sponsor</a>
+                </nav>
+            </div>
+        </footer>
+        <script>
+            import "../scripts/landing-copy.js";
+        </script>
+    </body>
+</html>
