@@ -33,5 +33,5 @@ The public API is frozen by default. Ask before you:
 
 - The build enforces the `.editorconfig` (`EnforceCodeStyleInBuild`, `TreatWarningsAsErrors`). Fix warnings. Do not suppress them without a reason.
 - Keep the file header, file-scoped namespaces, and the `s_` (static) and `_` (private) field prefixes.
-- `IDE0055` (whitespace) is only a suggestion in the build. Run `dotnet format --verify-no-changes` before you push.
+- CSharpier owns formatting. `IDE0055` is off. Run `dotnet csharpier format .` before you push. The Husky.Net pre-push hook runs `dotnet csharpier check .` and blocks unformatted pushes. Do not run `dotnet format whitespace`, because it fights CSharpier.
 - Run `dotnet build` and `dotnet test`. Put new tests in `tests/TypeSafe.AI.Sdk.Tests`.

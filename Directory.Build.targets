@@ -1,0 +1,25 @@
+<Project>
+  <!--
+    Installs the Husky.Net git hooks (.husky/) for contributors on restore/build.
+    Runs once per build, from the library project only.
+    Skipped in CI, when HUSKY=0, and when there is no .git (e.g. a source tarball).
+  -->
+  <Target
+    Name="InstallHuskyHooks"
+    BeforeTargets="Restore;CollectPackageReferences"
+    Condition="'$(MSBuildProjectName)' == 'TypeSafe.AI.Sdk' and '$(HUSKY)' != '0' and '$(CI)' != 'true' and '$(GITHUB_ACTIONS)' != 'true' and Exists('$(MSBuildThisFileDirectory).git')"
+  >
+    <Exec
+      Command="dotnet tool restore"
+      WorkingDirectory="$(MSBuildThisFileDirectory)"
+      StandardOutputImportance="Low"
+      StandardErrorImportance="High"
+    />
+    <Exec
+      Command="dotnet husky install"
+      WorkingDirectory="$(MSBuildThisFileDirectory)"
+      StandardOutputImportance="Low"
+      StandardErrorImportance="High"
+    />
+  </Target>
+</Project>
