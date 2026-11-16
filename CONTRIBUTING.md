@@ -32,7 +32,9 @@ Style is enforced at build time:
 - Root `.editorconfig` defines naming, IDE, and CA severities.
 - `Directory.Build.props` sets `EnforceCodeStyleInBuild`, `EnableNETAnalyzers`, and `TreatWarningsAsErrors`, so style warnings fail `dotnet build` / CI.
 - C# files use the MIT file header from `.editorconfig` (`IDE0073`).
-- Whitespace-only formatting (`IDE0055`) stays a suggestion and does not fail the build.
+- [CSharpier](https://csharpier.com) owns formatting (whitespace and layout), so `IDE0055` is off. It is a local dotnet tool in `.config/dotnet-tools.json`. Run `dotnet tool restore`, then `dotnet csharpier format .`. CI runs `dotnet csharpier check .`.
+- A [Husky.Net](https://alirezanet.github.io/Husky.Net/) `pre-push` hook runs `dotnet csharpier check .` and blocks the push if a file is unformatted. `dotnet build` or `dotnet restore` installs the hook for you (`Directory.Build.targets`). It is skipped in CI and when `HUSKY=0`. To install it by hand, run `dotnet tool restore && dotnet husky install`.
+- The bulk CSharpier formatting commit is listed in `.git-blame-ignore-revs`. GitHub skips it in blame. For local `git blame`, run `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 - Tests and samples relax selected rules (see the `tests/**/*.cs` / `samples/**/*.cs` sections in `.editorconfig`).
 
 Do not commit API keys or `.env` files.

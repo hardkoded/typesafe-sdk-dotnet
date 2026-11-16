@@ -12,7 +12,10 @@ internal static class AnswerParser
     {
         var element = AsObject(body, "POST /v1/systemone");
         var answers = new Dictionary<string, Answer>(StringComparer.Ordinal);
-        if (element.TryGetProperty("answers", out var answersNode) && answersNode.ValueKind == JsonValueKind.Object)
+        if (
+            element.TryGetProperty("answers", out var answersNode)
+            && answersNode.ValueKind == JsonValueKind.Object
+        )
         {
             foreach (var property in answersNode.EnumerateObject())
             {
@@ -21,7 +24,10 @@ internal static class AnswerParser
         }
 
         var usage = new Usage();
-        if (element.TryGetProperty("usage", out var usageNode) && usageNode.ValueKind == JsonValueKind.Object)
+        if (
+            element.TryGetProperty("usage", out var usageNode)
+            && usageNode.ValueKind == JsonValueKind.Object
+        )
         {
             usage = new Usage
             {
@@ -32,9 +38,11 @@ internal static class AnswerParser
 
         return new SystemOneResult
         {
-            Model = element.TryGetProperty("model", out var model) && model.ValueKind == JsonValueKind.String
-                ? model.GetString() ?? ""
-                : "",
+            Model =
+                element.TryGetProperty("model", out var model)
+                && model.ValueKind == JsonValueKind.String
+                    ? model.GetString() ?? ""
+                    : "",
             Answers = answers,
             Usage = usage,
         };
@@ -42,22 +50,33 @@ internal static class AnswerParser
 
     public static IReadOnlyList<ModelCard> ParseModels(object? body)
     {
-        if (body is not JsonElement element || element.ValueKind != JsonValueKind.Object
-            || !element.TryGetProperty("models", out var models) || models.ValueKind != JsonValueKind.Array)
+        if (
+            body is not JsonElement element
+            || element.ValueKind != JsonValueKind.Object
+            || !element.TryGetProperty("models", out var models)
+            || models.ValueKind != JsonValueKind.Array
+        )
         {
             throw new TypeSafeException(
-                "Unexpected response shape from GET /v1/models; expected { models: [...] }.");
+                "Unexpected response shape from GET /v1/models; expected { models: [...] }."
+            );
         }
 
         List<ModelCard> cards = [];
         foreach (var item in models.EnumerateArray())
         {
-            cards.Add(new ModelCard
-            {
-                Name = item.TryGetProperty("name", out var name) ? name.GetString() ?? "" : "",
-                Description = item.TryGetProperty("description", out var description) ? description.GetString() ?? "" : "",
-                ReleaseDate = item.TryGetProperty("release_date", out var release) ? release.GetString() ?? "" : "",
-            });
+            cards.Add(
+                new ModelCard
+                {
+                    Name = item.TryGetProperty("name", out var name) ? name.GetString() ?? "" : "",
+                    Description = item.TryGetProperty("description", out var description)
+                        ? description.GetString() ?? ""
+                        : "",
+                    ReleaseDate = item.TryGetProperty("release_date", out var release)
+                        ? release.GetString() ?? ""
+                        : "",
+                }
+            );
         }
 
         return cards;
@@ -65,9 +84,11 @@ internal static class AnswerParser
 
     private static Answer ParseAnswer(JsonElement node, string name)
     {
-        var type = node.TryGetProperty("type", out var typeNode) && typeNode.ValueKind == JsonValueKind.String
-            ? typeNode.GetString()
-            : null;
+        var type =
+            node.TryGetProperty("type", out var typeNode)
+            && typeNode.ValueKind == JsonValueKind.String
+                ? typeNode.GetString()
+                : null;
 
         return type switch
         {
@@ -77,24 +98,31 @@ internal static class AnswerParser
             },
             "choice" => new ChoiceAnswer
             {
-                Choice = node.TryGetProperty("choice", out var choice) ? choice.GetString() ?? "" : "",
-                Confidence = node.TryGetProperty("confidence", out var confidence) ? confidence.GetDouble() : 0,
+                Choice = node.TryGetProperty("choice", out var choice)
+                    ? choice.GetString() ?? ""
+                    : "",
+                Confidence = node.TryGetProperty("confidence", out var confidence)
+                    ? confidence.GetDouble()
+                    : 0,
                 Probabilities = ReadDoubleMap(node, "probabilities"),
             },
             "score" => new ScoreAnswer
             {
                 Score = node.TryGetProperty("score", out var score) ? score.GetDouble() : 0,
-                Confidence = node.TryGetProperty("confidence", out var confidence) ? confidence.GetDouble() : 0,
+                Confidence = node.TryGetProperty("confidence", out var confidence)
+                    ? confidence.GetDouble()
+                    : 0,
                 Legend = ReadElementMap(node, "legend"),
                 Probabilities = ReadDoubleMap(node, "probabilities"),
             },
             "box" => new BoxAnswer
             {
                 Box = ReadBox(node),
-                Confidence = node.TryGetProperty("confidence", out var boxConfidence)
+                Confidence =
+                    node.TryGetProperty("confidence", out var boxConfidence)
                     && boxConfidence.ValueKind == JsonValueKind.Number
-                    ? boxConfidence.GetDouble()
-                    : null,
+                        ? boxConfidence.GetDouble()
+                        : null,
             },
             _ => throw new TypeSafeException($"Unexpected answer type \"{type}\" for \"{name}\"."),
         };
@@ -124,7 +152,10 @@ internal static class AnswerParser
     private static IReadOnlyDictionary<string, double> ReadDoubleMap(JsonElement node, string name)
     {
         var map = new Dictionary<string, double>(StringComparer.Ordinal);
-        if (!node.TryGetProperty(name, out var property) || property.ValueKind != JsonValueKind.Object)
+        if (
+            !node.TryGetProperty(name, out var property)
+            || property.ValueKind != JsonValueKind.Object
+        )
         {
             return map;
         }
@@ -140,10 +171,16 @@ internal static class AnswerParser
         return map;
     }
 
-    private static IReadOnlyDictionary<string, JsonElement> ReadElementMap(JsonElement node, string name)
+    private static IReadOnlyDictionary<string, JsonElement> ReadElementMap(
+        JsonElement node,
+        string name
+    )
     {
         var map = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
-        if (!node.TryGetProperty(name, out var property) || property.ValueKind != JsonValueKind.Object)
+        if (
+            !node.TryGetProperty(name, out var property)
+            || property.ValueKind != JsonValueKind.Object
+        )
         {
             return map;
         }
@@ -157,7 +194,9 @@ internal static class AnswerParser
     }
 
     private static int? ReadNullableInt(JsonElement node, string name) =>
-        node.TryGetProperty(name, out var property) && property.ValueKind == JsonValueKind.Number && property.TryGetInt32(out var value)
+        node.TryGetProperty(name, out var property)
+        && property.ValueKind == JsonValueKind.Number
+        && property.TryGetInt32(out var value)
             ? value
             : null;
 
@@ -168,12 +207,15 @@ internal static class AnswerParser
             return element;
         }
 
-        throw new TypeSafeException($"Unexpected response shape from {endpoint}; expected a JSON object.");
+        throw new TypeSafeException(
+            $"Unexpected response shape from {endpoint}; expected a JSON object."
+        );
     }
 
     public static (JsonObject Payload, IReadOnlyList<AssetPart> Assets) BuildSystemOnePayload(
         SystemOneRequest request,
-        string defaultModel)
+        string defaultModel
+    )
     {
         Question.Validate(new Dictionary<string, Question>(request.Questions));
         var assets = new AssetContext(request.Assets);
@@ -197,7 +239,9 @@ internal static class AnswerParser
         {
             if (payload.ContainsKey("assets"))
             {
-                throw new TypeSafeException("`assets` is reserved for images; remove it from `Extra`.");
+                throw new TypeSafeException(
+                    "`assets` is reserved for images; remove it from `Extra`."
+                );
             }
 
             var entries = new JsonObject();
@@ -212,7 +256,10 @@ internal static class AnswerParser
         return (payload, parts);
     }
 
-    private static JsonObject BuildQuestions(IDictionary<string, Question> questions, AssetContext assets)
+    private static JsonObject BuildQuestions(
+        IDictionary<string, Question> questions,
+        AssetContext assets
+    )
     {
         var node = new JsonObject();
         foreach (var pair in questions)

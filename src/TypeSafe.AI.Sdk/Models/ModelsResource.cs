@@ -16,24 +16,28 @@ public sealed class ModelsResource
     /// <summary>List the models available to the account.</summary>
     public Task<IReadOnlyList<ModelCard>> ListAsync(
         RequestOptions? options = null,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken = default
+    ) =>
         _client.SendAsync(
             HttpMethod.Get,
             "/v1/models",
             body: null,
             options,
             cancellationToken,
-            AnswerParser.ParseModels);
+            AnswerParser.ParseModels
+        );
 
     /// <summary>List models and return the HTTP response metadata.</summary>
     public Task<TypeSafeResponse<IReadOnlyList<ModelCard>>> ListWithResponseAsync(
         RequestOptions? options = null,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken = default
+    ) =>
         _client.SendWithResponseAsync(
             HttpMethod.Get,
             "/v1/models",
             body: null,
             options,
             cancellationToken,
-            AnswerParser.ParseModels);
+            AnswerParser.ParseModels
+        );
 }

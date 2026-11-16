@@ -14,23 +14,30 @@ public sealed class LiveApiTests
     [LiveApiFact]
     public async Task SystemOne_answers_a_tiny_noul_and_choice()
     {
-        using var client = new TypeSafeClient(new TypeSafeClientOptions
-        {
-            TimeoutMs = 60_000,
-            LogLevel = TypeSafeLogLevel.Off,
-        });
+        using var client = new TypeSafeClient(
+            new TypeSafeClientOptions { TimeoutMs = 60_000, LogLevel = TypeSafeLogLevel.Off }
+        );
 
         var result = await client.SystemOneAsync(
             new { document = "I was charged twice. Please fix this ASAP." },
             ("billing", Question.Noul("Is this about billing?")),
-            ("category", Question.Choice("What is this ticket about?",
-                ("billing", null),
-                ("technical", null),
-                ("other", null))));
+            (
+                "category",
+                Question.Choice(
+                    "What is this ticket about?",
+                    ("billing", null),
+                    ("technical", null),
+                    ("other", null)
+                )
+            )
+        );
 
         Assert.False(string.IsNullOrWhiteSpace(result.Model));
         Assert.InRange(result.GetNoul("billing").Noul, 0, 1);
-        Assert.Contains(result.GetChoice("category").Choice, new[] { "billing", "technical", "other" });
+        Assert.Contains(
+            result.GetChoice("category").Choice,
+            new[] { "billing", "technical", "other" }
+        );
         Assert.NotNull(result.Usage.InputTokens);
         Assert.True(result.Usage.InputTokens > 0);
     }
@@ -38,11 +45,9 @@ public sealed class LiveApiTests
     [LiveApiFact]
     public async Task Models_list_returns_at_least_one_card()
     {
-        using var client = new TypeSafeClient(new TypeSafeClientOptions
-        {
-            TimeoutMs = 60_000,
-            LogLevel = TypeSafeLogLevel.Off,
-        });
+        using var client = new TypeSafeClient(
+            new TypeSafeClientOptions { TimeoutMs = 60_000, LogLevel = TypeSafeLogLevel.Off }
+        );
         var models = await client.Models.ListAsync();
         Assert.NotEmpty(models);
         Assert.False(string.IsNullOrWhiteSpace(models[0].Name));

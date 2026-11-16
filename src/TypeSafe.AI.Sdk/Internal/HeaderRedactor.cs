@@ -18,7 +18,9 @@ internal static class HeaderRedactor
         "set-cookie",
     };
 
-    public static Dictionary<string, string> Redact(IEnumerable<KeyValuePair<string, string>> headers)
+    public static Dictionary<string, string> Redact(
+        IEnumerable<KeyValuePair<string, string>> headers
+    )
     {
         var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in headers)

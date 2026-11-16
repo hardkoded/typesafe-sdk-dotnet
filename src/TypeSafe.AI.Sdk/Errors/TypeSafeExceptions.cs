@@ -12,9 +12,7 @@ public class TypeSafeException : Exception
 {
     /// <summary>Create an SDK error.</summary>
     public TypeSafeException(string message, Exception? innerException = null)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 }
 
 /// <summary>An unsuccessful HTTP response from the API. Mirrors JS <c>APIError</c>.</summary>
@@ -43,7 +41,8 @@ public class ApiException : TypeSafeException
         HttpStatusCode statusCode,
         object? body,
         HttpResponseHeaders headers,
-        string? message = null)
+        string? message = null
+    )
         : base(message ?? Describe(statusCode, body))
     {
         StatusCode = statusCode;
@@ -53,7 +52,11 @@ public class ApiException : TypeSafeException
     }
 
     /// <summary>Create the error subclass for an HTTP status code.</summary>
-    public static ApiException FromResponse(HttpStatusCode statusCode, object? body, HttpResponseHeaders headers)
+    public static ApiException FromResponse(
+        HttpStatusCode statusCode,
+        object? body,
+        HttpResponseHeaders headers
+    )
     {
         var status = (int)statusCode;
         return status switch
@@ -123,8 +126,11 @@ public class ApiException : TypeSafeException
             return errorString;
         }
 
-        if (element.TryGetProperty("error", out var error) && error.ValueKind == JsonValueKind.Object
-            && TryGetString(error, "message", out var errorMessage))
+        if (
+            element.TryGetProperty("error", out var error)
+            && error.ValueKind == JsonValueKind.Object
+            && TryGetString(error, "message", out var errorMessage)
+        )
         {
             return errorMessage;
         }
@@ -141,8 +147,10 @@ public class ApiException : TypeSafeException
 
         if (element.TryGetProperty("detail", out var detailNode))
         {
-            if (detailNode.ValueKind == JsonValueKind.Object
-                && TryGetString(detailNode, "message", out var detailMessage))
+            if (
+                detailNode.ValueKind == JsonValueKind.Object
+                && TryGetString(detailNode, "message", out var detailMessage)
+            )
             {
                 return detailMessage;
             }
@@ -161,17 +169,30 @@ public class ApiException : TypeSafeException
         List<string> parts = [];
         foreach (var item in errors.EnumerateArray())
         {
-            if (item.ValueKind != JsonValueKind.Object || !TryGetString(item, "msg", out var msg) || msg is null)
+            if (
+                item.ValueKind != JsonValueKind.Object
+                || !TryGetString(item, "msg", out var msg)
+                || msg is null
+            )
             {
                 continue;
             }
 
             var loc = "";
-            if (item.TryGetProperty("loc", out var locNode) && locNode.ValueKind == JsonValueKind.Array)
+            if (
+                item.TryGetProperty("loc", out var locNode)
+                && locNode.ValueKind == JsonValueKind.Array
+            )
             {
-                loc = string.Join(".", locNode.EnumerateArray()
-                    .Select(x => x.ValueKind == JsonValueKind.String ? x.GetString() : x.ToString())
-                    .Where(x => !string.IsNullOrEmpty(x) && x != "body"));
+                loc = string.Join(
+                    ".",
+                    locNode
+                        .EnumerateArray()
+                        .Select(x =>
+                            x.ValueKind == JsonValueKind.String ? x.GetString() : x.ToString()
+                        )
+                        .Where(x => !string.IsNullOrEmpty(x) && x != "body")
+                );
             }
 
             parts.Add(string.IsNullOrEmpty(loc) ? msg : $"{loc}: {msg}");
@@ -183,7 +204,10 @@ public class ApiException : TypeSafeException
     private static bool TryGetString(JsonElement element, string name, out string? value)
     {
         value = null;
-        if (!element.TryGetProperty(name, out var property) || property.ValueKind != JsonValueKind.String)
+        if (
+            !element.TryGetProperty(name, out var property)
+            || property.ValueKind != JsonValueKind.String
+        )
         {
             return false;
         }
@@ -197,50 +221,65 @@ public class ApiException : TypeSafeException
 public class BadRequestException : ApiException
 {
     /// <inheritdoc />
-    public BadRequestException(HttpStatusCode statusCode, object? body, HttpResponseHeaders headers, string? message = null)
-        : base(statusCode, body, headers, message)
-    {
-    }
+    public BadRequestException(
+        HttpStatusCode statusCode,
+        object? body,
+        HttpResponseHeaders headers,
+        string? message = null
+    )
+        : base(statusCode, body, headers, message) { }
 }
 
 /// <summary>HTTP 401: authentication failed.</summary>
 public class AuthenticationException : ApiException
 {
     /// <inheritdoc />
-    public AuthenticationException(HttpStatusCode statusCode, object? body, HttpResponseHeaders headers, string? message = null)
-        : base(statusCode, body, headers, message)
-    {
-    }
+    public AuthenticationException(
+        HttpStatusCode statusCode,
+        object? body,
+        HttpResponseHeaders headers,
+        string? message = null
+    )
+        : base(statusCode, body, headers, message) { }
 }
 
 /// <summary>HTTP 403: access is denied.</summary>
 public class PermissionDeniedException : ApiException
 {
     /// <inheritdoc />
-    public PermissionDeniedException(HttpStatusCode statusCode, object? body, HttpResponseHeaders headers, string? message = null)
-        : base(statusCode, body, headers, message)
-    {
-    }
+    public PermissionDeniedException(
+        HttpStatusCode statusCode,
+        object? body,
+        HttpResponseHeaders headers,
+        string? message = null
+    )
+        : base(statusCode, body, headers, message) { }
 }
 
 /// <summary>HTTP 404: the resource was not found.</summary>
 public class NotFoundException : ApiException
 {
     /// <inheritdoc />
-    public NotFoundException(HttpStatusCode statusCode, object? body, HttpResponseHeaders headers, string? message = null)
-        : base(statusCode, body, headers, message)
-    {
-    }
+    public NotFoundException(
+        HttpStatusCode statusCode,
+        object? body,
+        HttpResponseHeaders headers,
+        string? message = null
+    )
+        : base(statusCode, body, headers, message) { }
 }
 
 /// <summary>HTTP 422: request validation failed.</summary>
 public class UnprocessableEntityException : ApiException
 {
     /// <inheritdoc />
-    public UnprocessableEntityException(HttpStatusCode statusCode, object? body, HttpResponseHeaders headers, string? message = null)
-        : base(statusCode, body, headers, message)
-    {
-    }
+    public UnprocessableEntityException(
+        HttpStatusCode statusCode,
+        object? body,
+        HttpResponseHeaders headers,
+        string? message = null
+    )
+        : base(statusCode, body, headers, message) { }
 }
 
 /// <summary>HTTP 429: the rate limit was exceeded.</summary>
@@ -250,7 +289,12 @@ public class RateLimitException : ApiException
     public int? RetryAfterMs { get; }
 
     /// <inheritdoc />
-    public RateLimitException(HttpStatusCode statusCode, object? body, HttpResponseHeaders headers, string? message = null)
+    public RateLimitException(
+        HttpStatusCode statusCode,
+        object? body,
+        HttpResponseHeaders headers,
+        string? message = null
+    )
         : base(statusCode, body, headers, message)
     {
         RetryAfterMs = RetryCalculator.ParseRetryAfter(headers);
@@ -261,10 +305,13 @@ public class RateLimitException : ApiException
 public class InternalServerException : ApiException
 {
     /// <inheritdoc />
-    public InternalServerException(HttpStatusCode statusCode, object? body, HttpResponseHeaders headers, string? message = null)
-        : base(statusCode, body, headers, message)
-    {
-    }
+    public InternalServerException(
+        HttpStatusCode statusCode,
+        object? body,
+        HttpResponseHeaders headers,
+        string? message = null
+    )
+        : base(statusCode, body, headers, message) { }
 }
 
 /// <summary>
@@ -275,9 +322,7 @@ public class ApiConnectionException : TypeSafeException
 {
     /// <summary>Create a connection error.</summary>
     public ApiConnectionException(string? message = null, Exception? innerException = null)
-        : base(message ?? "Connection error.", innerException)
-    {
-    }
+        : base(message ?? "Connection error.", innerException) { }
 }
 
 /// <summary>
@@ -305,7 +350,5 @@ public class ApiUserAbortException : TypeSafeException
 {
     /// <summary>Create an abort error.</summary>
     public ApiUserAbortException(string? message = null, Exception? innerException = null)
-        : base(message ?? "Request was aborted.", innerException)
-    {
-    }
+        : base(message ?? "Request was aborted.", innerException) { }
 }

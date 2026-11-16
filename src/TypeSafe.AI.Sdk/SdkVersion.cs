@@ -13,8 +13,8 @@ public static class SdkVersion
 
     private static string Resolve()
     {
-        var informational = typeof(SdkVersion).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+        var informational = typeof(SdkVersion)
+            .Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion;
 
         if (string.IsNullOrWhiteSpace(informational))

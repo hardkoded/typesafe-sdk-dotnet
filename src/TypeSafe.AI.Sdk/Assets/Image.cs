@@ -18,7 +18,8 @@ namespace TypeSafe.AI.Sdk;
 /// </remarks>
 public sealed class Image
 {
-    private readonly string _reference = $"<image:{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}>";
+    private readonly string _reference =
+        $"<image:{Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)}>";
     private readonly byte[] _bytes;
 
     /// <summary>Create an image from file bytes. The bytes are copied.</summary>
@@ -62,9 +63,18 @@ public sealed class Image
         {
             bytes = File.ReadAllBytes(path);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or System.Security.SecurityException)
+        catch (Exception ex)
+            when (ex
+                    is IOException
+                        or UnauthorizedAccessException
+                        or NotSupportedException
+                        or System.Security.SecurityException
+            )
         {
-            throw new TypeSafeException($"Image file \"{path}\" could not be read: {ex.Message}", ex);
+            throw new TypeSafeException(
+                $"Image file \"{path}\" could not be read: {ex.Message}",
+                ex
+            );
         }
 
         return new Image(bytes);

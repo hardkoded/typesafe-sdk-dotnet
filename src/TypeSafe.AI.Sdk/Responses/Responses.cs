@@ -132,7 +132,8 @@ public sealed class SystemOneResult
     public Usage Usage { get; init; } = new();
 
     /// <summary>Return the named answer as <typeparamref name="T"/>.</summary>
-    public T Get<T>(string name) where T : Answer
+    public T Get<T>(string name)
+        where T : Answer
     {
         if (!Answers.TryGetValue(name, out var answer))
         {
@@ -142,7 +143,8 @@ public sealed class SystemOneResult
         if (answer is not T typed)
         {
             throw new TypeSafeException(
-                $"Answer \"{name}\" is {answer.Type}, not {typeof(T).Name}.");
+                $"Answer \"{name}\" is {answer.Type}, not {typeof(T).Name}."
+            );
         }
 
         return typed;

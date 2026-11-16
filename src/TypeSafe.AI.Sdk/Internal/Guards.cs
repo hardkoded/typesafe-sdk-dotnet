@@ -19,7 +19,9 @@ internal static class Guards
     {
         if (value <= 0)
         {
-            throw new TypeSafeException($"`{name}` must be a positive number of milliseconds, got {value}.");
+            throw new TypeSafeException(
+                $"`{name}` must be a positive number of milliseconds, got {value}."
+            );
         }
 
         return value;
@@ -29,7 +31,9 @@ internal static class Guards
     {
         if (value < 0)
         {
-            throw new TypeSafeException($"`{name}` must be a non-negative number of milliseconds, got {value}.");
+            throw new TypeSafeException(
+                $"`{name}` must be a non-negative number of milliseconds, got {value}."
+            );
         }
 
         return value;
@@ -51,7 +55,9 @@ internal static class Guards
         {
             if (status < 100 || status > 999)
             {
-                throw new TypeSafeException($"`{name}` must contain HTTP status codes, got {status}.");
+                throw new TypeSafeException(
+                    $"`{name}` must contain HTTP status codes, got {status}."
+                );
             }
         }
 

@@ -62,49 +62,62 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
     /// </summary>
     /// <exception cref="TypeSafeException">The API key is missing or configuration is invalid.</exception>
     public TypeSafeClient(TypeSafeClientOptions? options = null)
-        : this(httpClient: null, options, ownsHttpClient: null)
-    {
-    }
+        : this(httpClient: null, options, ownsHttpClient: null) { }
 
     /// <summary>Create a client that uses the given <see cref="HttpClient"/> (typically from <c>IHttpClientFactory</c>).</summary>
     public TypeSafeClient(HttpClient httpClient, TypeSafeClientOptions? options = null)
-        : this(httpClient, options, ownsHttpClient: false)
-    {
-    }
+        : this(httpClient, options, ownsHttpClient: false) { }
 
     /// <summary>Create a client with an explicit API key.</summary>
     public TypeSafeClient(string apiKey, TypeSafeClientOptions? options = null)
-        : this(httpClient: null, WithApiKey(options, apiKey), ownsHttpClient: null)
-    {
-    }
+        : this(httpClient: null, WithApiKey(options, apiKey), ownsHttpClient: null) { }
 
     /// <summary>Create a client with an explicit API key and <see cref="HttpClient"/>.</summary>
-    public TypeSafeClient(string apiKey, HttpClient httpClient, TypeSafeClientOptions? options = null)
-        : this(httpClient, WithApiKey(options, apiKey), ownsHttpClient: false)
-    {
-    }
+    public TypeSafeClient(
+        string apiKey,
+        HttpClient httpClient,
+        TypeSafeClientOptions? options = null
+    )
+        : this(httpClient, WithApiKey(options, apiKey), ownsHttpClient: false) { }
 
-    private TypeSafeClient(HttpClient? httpClient, TypeSafeClientOptions? options, bool? ownsHttpClient)
+    private TypeSafeClient(
+        HttpClient? httpClient,
+        TypeSafeClientOptions? options,
+        bool? ownsHttpClient
+    )
     {
         options ??= new TypeSafeClientOptions();
         _apiKey = Env.FromCodeOrEnv(options.ApiKey, Env.ApiKey)
             ?? throw new TypeSafeException(
-                $"No API key was provided. Pass `ApiKey` to the TypeSafeClient constructor or set the {Env.ApiKey} environment variable.");
+                $"No API key was provided. Pass `ApiKey` to the TypeSafeClient constructor or set the {Env.ApiKey} environment variable."
+            );
 
-        BaseUrl = StripTrailingSlashes(Env.FromCodeOrEnv(options.BaseUrl, Env.BaseUrl) ?? DefaultBaseUrl);
-        DefaultModel = Env.FromCodeOrEnv(options.DefaultModel, Env.DefaultModel) ?? DefaultModelName;
+        BaseUrl = StripTrailingSlashes(
+            Env.FromCodeOrEnv(options.BaseUrl, Env.BaseUrl) ?? DefaultBaseUrl
+        );
+        DefaultModel = Env.FromCodeOrEnv(options.DefaultModel, Env.DefaultModel)
+            ?? DefaultModelName;
         LogLevel = ResolveLogLevel(options);
         Logger = new LevelFilteredLogger(options.Logger ?? new ConsoleTypeSafeLogger(), LogLevel);
         Retry = RetryPolicy.Resolve(RetryPolicy.Default, options.Retry).Validate();
-        TimeoutMs = Guards.PositiveMs("timeout", options.TimeoutMs ?? RetryCalculator.DefaultTimeoutMs);
+        TimeoutMs = Guards.PositiveMs(
+            "timeout",
+            options.TimeoutMs ?? RetryCalculator.DefaultTimeoutMs
+        );
         Compression = options.Compression;
         _defaultHeaders = options.DefaultHeaders is null
             ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            : new Dictionary<string, string>(options.DefaultHeaders, StringComparer.OrdinalIgnoreCase);
+            : new Dictionary<string, string>(
+                options.DefaultHeaders,
+                StringComparer.OrdinalIgnoreCase
+            );
 
         if (httpClient is null)
         {
-            _http = new HttpClient(options.HttpMessageHandler ?? new HttpClientHandler(), disposeHandler: options.HttpMessageHandler is null)
+            _http = new HttpClient(
+                options.HttpMessageHandler ?? new HttpClientHandler(),
+                disposeHandler: options.HttpMessageHandler is null
+            )
             {
                 Timeout = Timeout.InfiniteTimeSpan,
             };
@@ -123,24 +136,28 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
     public async Task<SystemOneResult> SystemOneAsync(
         SystemOneRequest request,
         RequestOptions? options = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var (payload, assets) = AnswerParser.BuildSystemOnePayload(request, DefaultModel);
         return await SendAsync(
-            HttpMethod.Post,
-            "/v1/systemone",
-            payload,
-            options,
-            cancellationToken,
-            AnswerParser.ParseSystemOne,
-            assets).ConfigureAwait(false);
+                HttpMethod.Post,
+                "/v1/systemone",
+                payload,
+                options,
+                cancellationToken,
+                AnswerParser.ParseSystemOne,
+                assets
+            )
+            .ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public Task<TypeSafeResponse<SystemOneResult>> SystemOneWithResponseAsync(
         SystemOneRequest request,
         RequestOptions? options = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var (payload, assets) = AnswerParser.BuildSystemOnePayload(request, DefaultModel);
         return SendWithResponseAsync(
@@ -150,7 +167,8 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             options,
             cancellationToken,
             AnswerParser.ParseSystemOne,
-            assets);
+            assets
+        );
     }
 
     /// <summary>Answer named questions and return the HTTP response metadata.</summary>
@@ -159,8 +177,18 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         IDictionary<string, Question> questions,
         string? model = null,
         RequestOptions? options = null,
-        CancellationToken cancellationToken = default) =>
-        SystemOneWithResponseAsync(new SystemOneRequest { State = state, Questions = questions, Model = model }, options, cancellationToken);
+        CancellationToken cancellationToken = default
+    ) =>
+        SystemOneWithResponseAsync(
+            new SystemOneRequest
+            {
+                State = state,
+                Questions = questions,
+                Model = model,
+            },
+            options,
+            cancellationToken
+        );
 
     /// <summary>Answer named questions about text or structured state.</summary>
     public Task<SystemOneResult> SystemOneAsync(
@@ -168,20 +196,30 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         IDictionary<string, Question> questions,
         string? model = null,
         RequestOptions? options = null,
-        CancellationToken cancellationToken = default) =>
-        SystemOneAsync(new SystemOneRequest { State = state, Questions = questions, Model = model }, options, cancellationToken);
+        CancellationToken cancellationToken = default
+    ) =>
+        SystemOneAsync(
+            new SystemOneRequest
+            {
+                State = state,
+                Questions = questions,
+                Model = model,
+            },
+            options,
+            cancellationToken
+        );
 
     /// <inheritdoc />
     public Task<SystemOneResult> SystemOneAsync(
         object? state,
-        params (string Name, Question Question)[] questions) =>
-        SystemOneAsync(state, Question.Map(questions));
+        params (string Name, Question Question)[] questions
+    ) => SystemOneAsync(state, Question.Map(questions));
 
     /// <inheritdoc />
     public Task<TypeSafeResponse<SystemOneResult>> SystemOneWithResponseAsync(
         object? state,
-        params (string Name, Question Question)[] questions) =>
-        SystemOneWithResponseAsync(state, Question.Map(questions));
+        params (string Name, Question Question)[] questions
+    ) => SystemOneWithResponseAsync(state, Question.Map(questions));
 
     internal async Task<T> SendAsync<T>(
         HttpMethod method,
@@ -190,9 +228,19 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         RequestOptions? options,
         CancellationToken cancellationToken,
         Func<object?, T> parse,
-        IReadOnlyList<AssetPart>? assets = null)
+        IReadOnlyList<AssetPart>? assets = null
+    )
     {
-        var result = await SendCoreAsync(method, path, body, options, cancellationToken, parse, assets).ConfigureAwait(false);
+        var result = await SendCoreAsync(
+                method,
+                path,
+                body,
+                options,
+                cancellationToken,
+                parse,
+                assets
+            )
+            .ConfigureAwait(false);
         return result.Data;
     }
 
@@ -203,8 +251,10 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         RequestOptions? options,
         CancellationToken cancellationToken,
         Func<object?, T> parse,
-        IReadOnlyList<AssetPart>? assets = null) =>
-        await SendCoreAsync(method, path, body, options, cancellationToken, parse, assets).ConfigureAwait(false);
+        IReadOnlyList<AssetPart>? assets = null
+    ) =>
+        await SendCoreAsync(method, path, body, options, cancellationToken, parse, assets)
+            .ConfigureAwait(false);
 
     private async Task<TypeSafeResponse<T>> SendCoreAsync<T>(
         HttpMethod method,
@@ -213,7 +263,8 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         RequestOptions? options,
         CancellationToken cancellationToken,
         Func<object?, T> parse,
-        IReadOnlyList<AssetPart>? assets)
+        IReadOnlyList<AssetPart>? assets
+    )
     {
         options ??= new RequestOptions();
         var timeout = options.TimeoutMs is int perCall
@@ -225,14 +276,19 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             retry.Validate();
         }
 
-        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, options.CancellationToken);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(
+            cancellationToken,
+            options.CancellationToken
+        );
         var token = linked.Token;
         var headers = MergeHeaders(_defaultHeaders, options.Headers);
         var tag = $"#{Interlocked.Increment(ref _requestCount)} {method.Method} {path}";
         var url = BaseUrl + path;
         var json = body?.ToJsonString(JsonValues.SerializerOptions);
         // Encoded (and compressed) once and sent as-is on every attempt.
-        var encoded = json is null ? null : await EncodeBodyAsync(json, assets).ConfigureAwait(false);
+        var encoded = json is null
+            ? null
+            : await EncodeBodyAsync(json, assets).ConfigureAwait(false);
 
         HttpResponseMessage? response = null;
         object? parsedBody = null;
@@ -242,7 +298,18 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             var retriesLeft = retry.MaxRetries - attempt;
             try
             {
-                var attemptResult = await AttemptAsync(tag, url, method, json, encoded, headers, attempt, timeout, token).ConfigureAwait(false);
+                var attemptResult = await AttemptAsync(
+                        tag,
+                        url,
+                        method,
+                        json,
+                        encoded,
+                        headers,
+                        attempt,
+                        timeout,
+                        token
+                    )
+                    .ConfigureAwait(false);
                 response = attemptResult.Response;
                 responseElapsedMs = attemptResult.ElapsedMs;
             }
@@ -257,15 +324,29 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
                     throw;
                 }
 
-                await BackOffAsync(tag, attempt, retriesLeft, ex.Message, headers: null, retry, token).ConfigureAwait(false);
+                await BackOffAsync(
+                        tag,
+                        attempt,
+                        retriesLeft,
+                        ex.Message,
+                        headers: null,
+                        retry,
+                        token
+                    )
+                    .ConfigureAwait(false);
                 continue;
             }
 
             var requestId = ApiException.TryGetRequestId(response.Headers);
-            Logger.Info($"{tag} <- {(int)response.StatusCode} in {responseElapsedMs}ms{(requestId is null ? "" : $" (request {requestId})")}");
+            Logger.Info(
+                $"{tag} <- {(int)response.StatusCode} in {responseElapsedMs}ms{(requestId is null ? "" : $" (request {requestId})")}"
+            );
 
             var text = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            parsedBody = JsonValues.ParseBody(text, response.Content.Headers.ContentType?.MediaType);
+            parsedBody = JsonValues.ParseBody(
+                text,
+                response.Content.Headers.ContentType?.MediaType
+            );
 
             if (response.IsSuccessStatusCode)
             {
@@ -275,7 +356,11 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             }
 
             Logger.Debug($"{tag} <- error body", parsedBody);
-            var error = ApiException.FromResponse(response.StatusCode, parsedBody, response.Headers);
+            var error = ApiException.FromResponse(
+                response.StatusCode,
+                parsedBody,
+                response.Headers
+            );
             if (retriesLeft <= 0 || !RetryCalculator.IsRetryableStatus(error.Status, retry))
             {
                 response.Dispose();
@@ -284,7 +369,16 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
 
             var errorHeaders = response.Headers;
             response.Dispose();
-            await BackOffAsync(tag, attempt, retriesLeft, $"{error.Status}", errorHeaders, retry, token).ConfigureAwait(false);
+            await BackOffAsync(
+                    tag,
+                    attempt,
+                    retriesLeft,
+                    $"{error.Status}",
+                    errorHeaders,
+                    retry,
+                    token
+                )
+                .ConfigureAwait(false);
         }
     }
 
@@ -297,7 +391,8 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         IReadOnlyDictionary<string, string> userHeaders,
         int attempt,
         int timeout,
-        CancellationToken callerToken)
+        CancellationToken callerToken
+    )
     {
         using var attemptCts = CancellationTokenSource.CreateLinkedTokenSource(callerToken);
         attemptCts.CancelAfter(timeout);
@@ -305,8 +400,10 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         using var request = new HttpRequestMessage(method, url);
         foreach (var header in BuildHeaders(userHeaders, body, attempt))
         {
-            if (header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase)
-                || header.Key.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase))
+            if (
+                header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase)
+                || header.Key.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase)
+            )
             {
                 continue;
             }
@@ -324,16 +421,20 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             }
         }
 
-        Logger.Debug($"{tag} -> {url}", new
-        {
-            headers = HeaderRedactor.Redact(BuildHeaders(userHeaders, body, attempt)),
-            body = json is null ? null : JsonNode.Parse(json),
-        });
+        Logger.Debug(
+            $"{tag} -> {url}",
+            new
+            {
+                headers = HeaderRedactor.Redact(BuildHeaders(userHeaders, body, attempt)),
+                body = json is null ? null : JsonNode.Parse(json),
+            }
+        );
 
         var started = Stopwatch.StartNew();
         try
         {
-            var response = await _http.SendAsync(request, HttpCompletionOption.ResponseContentRead, attemptCts.Token)
+            var response = await _http
+                .SendAsync(request, HttpCompletionOption.ResponseContentRead, attemptCts.Token)
                 .ConfigureAwait(false);
             return (response, started.ElapsedMilliseconds);
         }
@@ -365,7 +466,11 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         if (assets is not { Count: > 0 })
         {
             var (jsonBytes, jsonCompressed) = BodyCompression.Encode(json, Compression);
-            return new EncodedBody(jsonBytes, jsonCompressed, new MediaTypeHeaderValue("application/json") { CharSet = "utf-8" });
+            return new EncodedBody(
+                jsonBytes,
+                jsonCompressed,
+                new MediaTypeHeaderValue("application/json") { CharSet = "utf-8" }
+            );
         }
 
         // Like the JS SDK, the whole multipart body is compressed, not just its JSON part.
@@ -375,15 +480,24 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         return new EncodedBody(bytes, compressed, form.Headers.ContentType!);
     }
 
-    private sealed record EncodedBody(byte[] Bytes, bool Compressed, MediaTypeHeaderValue ContentType);
+    private sealed record EncodedBody(
+        byte[] Bytes,
+        bool Compressed,
+        MediaTypeHeaderValue ContentType
+    );
 
     /// <summary>A <c>multipart/form-data</c> body whose first part, <c>request</c>, is the JSON payload, followed by each image's file bytes.</summary>
-    private static MultipartFormDataContent BuildMultipart(string json, IReadOnlyList<AssetPart> assets)
+    private static MultipartFormDataContent BuildMultipart(
+        string json,
+        IReadOnlyList<AssetPart> assets
+    )
     {
         var boundary = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
         var form = new MultipartFormDataContent(boundary);
         // HttpClient quotes the boundary by default; send it bare, as browsers do.
-        form.Headers.ContentType = MediaTypeHeaderValue.Parse($"multipart/form-data; boundary={boundary}");
+        form.Headers.ContentType = MediaTypeHeaderValue.Parse(
+            $"multipart/form-data; boundary={boundary}"
+        );
         form.Add(new StringContent(json, Encoding.UTF8, "application/json"), "request");
         foreach (var asset in assets)
         {
@@ -402,10 +516,13 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         string reason,
         HttpResponseHeaders? headers,
         RetryPolicy retry,
-        CancellationToken token)
+        CancellationToken token
+    )
     {
         var delay = RetryCalculator.DelayMs(attempt, headers, retry);
-        Logger.Info($"{tag} retrying in {delay}ms (retry {attempt + 1}/{attempt + retriesLeft}) after {reason}");
+        Logger.Info(
+            $"{tag} retrying in {delay}ms (retry {attempt + 1}/{attempt + retriesLeft}) after {reason}"
+        );
         try
         {
             await RetryCalculator.SleepAsync(delay, token).ConfigureAwait(false);
@@ -417,7 +534,11 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         }
     }
 
-    private Dictionary<string, string> BuildHeaders(IReadOnlyDictionary<string, string> userHeaders, EncodedBody? body, int attempt)
+    private Dictionary<string, string> BuildHeaders(
+        IReadOnlyDictionary<string, string> userHeaders,
+        EncodedBody? body,
+        int attempt
+    )
     {
         var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in userHeaders)
@@ -451,7 +572,8 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
 
     private static Dictionary<string, string> MergeHeaders(
         IReadOnlyDictionary<string, string> defaults,
-        IDictionary<string, string>? perCall)
+        IDictionary<string, string>? perCall
+    )
     {
         var merged = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in defaults)

@@ -33,13 +33,24 @@ internal sealed class AssetPart
         : "application/octet-stream";
 
     /// <summary>The PNG file signature (PNG spec 5.2).</summary>
-    private static readonly byte[] s_pngSignature = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+    private static readonly byte[] s_pngSignature =
+    {
+        0x89,
+        0x50,
+        0x4E,
+        0x47,
+        0x0D,
+        0x0A,
+        0x1A,
+        0x0A,
+    };
 
     /// <summary>The JPEG start-of-image marker (ITU T.81).</summary>
     private static readonly byte[] s_jpegSignature = { 0xFF, 0xD8, 0xFF };
 
     private static bool StartsWith(byte[] bytes, byte[] signature) =>
-        bytes.Length >= signature.Length && bytes.AsSpan(0, signature.Length).SequenceEqual(signature);
+        bytes.Length >= signature.Length
+        && bytes.AsSpan(0, signature.Length).SequenceEqual(signature);
 }
 
 /// <summary>
@@ -49,9 +60,15 @@ internal sealed class AssetPart
 internal sealed class AssetContext
 {
     /// <summary>Matches <see cref="Image.ToString"/>: the reference an image is sent under.</summary>
-    public static readonly Regex Reference = new("<image:[0-9a-f]{32}>", RegexOptions.CultureInvariant);
+    public static readonly Regex Reference = new(
+        "<image:[0-9a-f]{32}>",
+        RegexOptions.CultureInvariant
+    );
 
-    private static readonly JsonSerializerOptions s_relaxed = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    private static readonly JsonSerializerOptions s_relaxed = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
 
     private readonly IDictionary<string, Image> _named;
     private readonly Dictionary<Image, string> _names = new();
@@ -113,14 +130,15 @@ internal sealed class AssetContext
     {
         // Names are matched as they appear in the JSON, with quotes and backslashes escaped.
         var json = payload.ToJsonString(s_relaxed);
-        var unreferenced = _named.Keys
-            .Where(name => !json.Contains(Unquoted(JsonSerializer.Serialize(name, s_relaxed))))
+        var unreferenced = _named
+            .Keys.Where(name => !json.Contains(Unquoted(JsonSerializer.Serialize(name, s_relaxed))))
             .ToList();
         if (unreferenced.Count > 0)
         {
             throw new TypeSafeException(
-                $"Assets not referenced in the request: {string.Join(", ", unreferenced)}. " +
-                "Write each name in `Assets` into `State`, question instructions, or criteria.");
+                $"Assets not referenced in the request: {string.Join(", ", unreferenced)}. "
+                    + "Write each name in `Assets` into `State`, question instructions, or criteria."
+            );
         }
 
         var sent = new List<(string Alias, Image Image)>();
@@ -153,12 +171,16 @@ internal sealed class AssetContext
         if (missing.Count > 0)
         {
             throw new TypeSafeException(
-                $"Image references without an attached image: {string.Join(", ", missing)}. " +
-                "Interpolate images with `TextWithAssets.From`.");
+                $"Image references without an attached image: {string.Join(", ", missing)}. "
+                    + "Interpolate images with `TextWithAssets.From`."
+            );
         }
 
         // The API accepts each part for only one asset, so an image under several references is sent once per reference.
-        return sent.Select((entry, index) => new AssetPart(entry.Alias, entry.Image, $"asset-{index}")).ToList();
+        return sent.Select(
+                (entry, index) => new AssetPart(entry.Alias, entry.Image, $"asset-{index}")
+            )
+            .ToList();
     }
 
     private static string Unquoted(string json) => json.Substring(1, json.Length - 2);

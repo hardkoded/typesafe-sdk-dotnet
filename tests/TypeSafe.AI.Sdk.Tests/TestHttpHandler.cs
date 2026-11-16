@@ -21,62 +21,76 @@ internal sealed class RecordedRequest
 
 internal sealed class ScriptedHandler : HttpMessageHandler
 {
-    private readonly Func<RecordedRequest, int, CancellationToken, Task<HttpResponseMessage>> _respond;
+    private readonly Func<
+        RecordedRequest,
+        int,
+        CancellationToken,
+        Task<HttpResponseMessage>
+    > _respond;
     public List<RecordedRequest> Requests { get; } = new();
 
     public ScriptedHandler(Func<RecordedRequest, int, HttpResponseMessage> respond)
-        : this((req, n, _) => Task.FromResult(respond(req, n)))
-    {
-    }
+        : this((req, n, _) => Task.FromResult(respond(req, n))) { }
 
-    public ScriptedHandler(Func<RecordedRequest, int, CancellationToken, Task<HttpResponseMessage>> respond)
+    public ScriptedHandler(
+        Func<RecordedRequest, int, CancellationToken, Task<HttpResponseMessage>> respond
+    )
     {
         _respond = respond;
     }
 
     public static ScriptedHandler Hang() =>
-        new(async (_, _, cancellationToken) =>
-        {
-            await Task.Delay(Timeout.Infinite, cancellationToken).ConfigureAwait(false);
-            return new HttpResponseMessage(HttpStatusCode.OK);
-        });
+        new(
+            async (_, _, cancellationToken) =>
+            {
+                await Task.Delay(Timeout.Infinite, cancellationToken).ConfigureAwait(false);
+                return new HttpResponseMessage(HttpStatusCode.OK);
+            }
+        );
 
     public static ScriptedHandler Json(
         object body,
         HttpStatusCode status = HttpStatusCode.OK,
-        IDictionary<string, string>? headers = null) =>
-        Sequence(JsonResponse(body, status, headers));
+        IDictionary<string, string>? headers = null
+    ) => Sequence(JsonResponse(body, status, headers));
 
     public static ScriptedHandler Sequence(params HttpResponseMessage[] responses)
     {
         var index = 0;
-        return new ScriptedHandler((_, _) =>
-        {
-            var current = index < responses.Length ? responses[index] : responses[^1];
-            index++;
-            return Clone(current);
-        });
+        return new ScriptedHandler(
+            (_, _) =>
+            {
+                var current = index < responses.Length ? responses[index] : responses[^1];
+                index++;
+                return Clone(current);
+            }
+        );
     }
 
     public static HttpResponseMessage JsonResponse(
         object? body,
         HttpStatusCode status = HttpStatusCode.OK,
-        IDictionary<string, string>? headers = null)
+        IDictionary<string, string>? headers = null
+    )
     {
-        var json = body is null || (body is string s && s.Length == 0)
-            ? ""
-            : body is string text && !LooksLikeJson(text)
-                ? text
-                : body is string jsonText
-                    ? jsonText
-                    : JsonSerializer.Serialize(body);
+        var json =
+            body is null || (body is string s && s.Length == 0) ? ""
+            : body is string text && !LooksLikeJson(text) ? text
+            : body is string jsonText ? jsonText
+            : JsonSerializer.Serialize(body);
         var response = new HttpResponseMessage(status)
         {
-            Content = new StringContent(json, Encoding.UTF8, body is string raw && !LooksLikeJson(raw) ? "text/html" : "application/json"),
+            Content = new StringContent(
+                json,
+                Encoding.UTF8,
+                body is string raw && !LooksLikeJson(raw) ? "text/html" : "application/json"
+            ),
         };
         if (body is string plain && !LooksLikeJson(plain))
         {
-            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/html");
+            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
+                "text/html"
+            );
         }
 
         if (headers is not null)
@@ -93,7 +107,10 @@ internal sealed class ScriptedHandler : HttpMessageHandler
         return response;
     }
 
-    public static HttpResponseMessage Empty(HttpStatusCode status, IDictionary<string, string>? headers = null)
+    public static HttpResponseMessage Empty(
+        HttpStatusCode status,
+        IDictionary<string, string>? headers = null
+    )
     {
         var response = new HttpResponseMessage(status) { Content = new StringContent("") };
         if (headers is not null)
@@ -107,9 +124,14 @@ internal sealed class ScriptedHandler : HttpMessageHandler
         return response;
     }
 
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken
+    )
     {
-        var bodyBytes = request.Content is null ? null : await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+        var bodyBytes = request.Content is null
+            ? null
+            : await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
         var bodyText = bodyBytes is null ? null : Encoding.UTF8.GetString(bodyBytes);
         JsonElement? body = null;
         if (!string.IsNullOrEmpty(bodyText))
@@ -160,7 +182,11 @@ internal sealed class ScriptedHandler : HttpMessageHandler
     {
         var clone = new HttpResponseMessage(source.StatusCode)
         {
-            Content = new StringContent(source.Content.ReadAsStringAsync().GetAwaiter().GetResult(), Encoding.UTF8, source.Content.Headers.ContentType?.MediaType ?? "application/json"),
+            Content = new StringContent(
+                source.Content.ReadAsStringAsync().GetAwaiter().GetResult(),
+                Encoding.UTF8,
+                source.Content.Headers.ContentType?.MediaType ?? "application/json"
+            ),
             ReasonPhrase = source.ReasonPhrase,
         };
         foreach (var header in source.Headers)
@@ -176,7 +202,8 @@ internal static class TestClient
 {
     public static TypeSafeClient Create(
         ScriptedHandler handler,
-        Action<TypeSafeClientOptions>? configure = null)
+        Action<TypeSafeClientOptions>? configure = null
+    )
     {
         var options = new TypeSafeClientOptions
         {
@@ -215,6 +242,14 @@ internal static class Fixtures
 
     public static readonly object Models = new
     {
-        models = new[] { new { name = "m", description = "d", release_date = "2026" } },
+        models = new[]
+        {
+            new
+            {
+                name = "m",
+                description = "d",
+                release_date = "2026",
+            },
+        },
     };
 }

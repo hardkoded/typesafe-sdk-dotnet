@@ -15,7 +15,11 @@ internal static class WallyFinder
     private const int ZoomedSize = 512;
 
     /// <summary>Finds the character with two passes: a rough box in the whole scene, then a tighter one in a zoomed view of it.</summary>
-    public static async Task<(BoxCoordinates Box, double? Confidence)> FindAsync(ITypeSafeClient client, string scenePath, string characterPath)
+    public static async Task<(BoxCoordinates Box, double? Confidence)> FindAsync(
+        ITypeSafeClient client,
+        string scenePath,
+        string characterPath
+    )
     {
         var character = Image.FromFile(characterPath);
         var roughAnswer = await AskAsync(client, Image.FromFile(scenePath), character);
@@ -65,7 +69,8 @@ internal static class WallyFinder
             (float)(box.Top * bitmap.Height),
             (float)((box.Right - box.Left) * bitmap.Width),
             (float)((box.Bottom - box.Top) * bitmap.Height),
-            paint);
+            paint
+        );
 
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
@@ -74,23 +79,40 @@ internal static class WallyFinder
     }
 
     /// <summary>Orders the corners and keeps the box inside the image, because the model can answer outside it.</summary>
-    private static BoxCoordinates Normalize(BoxCoordinates box) => new()
-    {
-        Left = Math.Clamp(Math.Min(box.Left, box.Right), 0, 1),
-        Right = Math.Clamp(Math.Max(box.Left, box.Right), 0, 1),
-        Top = Math.Clamp(Math.Min(box.Top, box.Bottom), 0, 1),
-        Bottom = Math.Clamp(Math.Max(box.Top, box.Bottom), 0, 1),
-    };
-
-    private static async Task<BoxAnswer> AskAsync(ITypeSafeClient client, Image scene, Image character)
-    {
-        var result = await client.SystemOneAsync(new SystemOneRequest
+    private static BoxCoordinates Normalize(BoxCoordinates box) =>
+        new()
         {
-            Model = Model,
-            State = TextWithAssets.From($"A busy Where's Wally scene: {scene}. The character to find: {character}."),
-            Questions = Question.Map(("character", Question.Box(
-                TextWithAssets.From($"Where is the character from {character} in the scene {scene}? Wally wears a red and white striped shirt and bobble hat, and round glasses.")))),
-        });
+            Left = Math.Clamp(Math.Min(box.Left, box.Right), 0, 1),
+            Right = Math.Clamp(Math.Max(box.Left, box.Right), 0, 1),
+            Top = Math.Clamp(Math.Min(box.Top, box.Bottom), 0, 1),
+            Bottom = Math.Clamp(Math.Max(box.Top, box.Bottom), 0, 1),
+        };
+
+    private static async Task<BoxAnswer> AskAsync(
+        ITypeSafeClient client,
+        Image scene,
+        Image character
+    )
+    {
+        var result = await client.SystemOneAsync(
+            new SystemOneRequest
+            {
+                Model = Model,
+                State = TextWithAssets.From(
+                    $"A busy Where's Wally scene: {scene}. The character to find: {character}."
+                ),
+                Questions = Question.Map(
+                    (
+                        "character",
+                        Question.Box(
+                            TextWithAssets.From(
+                                $"Where is the character from {character} in the scene {scene}? Wally wears a red and white striped shirt and bobble hat, and round glasses."
+                            )
+                        )
+                    )
+                ),
+            }
+        );
 
         return result.GetBox("character");
     }
@@ -99,17 +121,25 @@ internal static class WallyFinder
     private static Image Crop(string scenePath, BoxCoordinates area)
     {
         using var scene = Decode(scenePath);
-        var source = SKRectI.Round(new SKRect(
-            (float)(area.Left * scene.Width),
-            (float)(area.Top * scene.Height),
-            (float)(area.Right * scene.Width),
-            (float)(area.Bottom * scene.Height)));
+        var source = SKRectI.Round(
+            new SKRect(
+                (float)(area.Left * scene.Width),
+                (float)(area.Top * scene.Height),
+                (float)(area.Right * scene.Width),
+                (float)(area.Bottom * scene.Height)
+            )
+        );
         var scale = (float)ZoomedSize / Math.Max(1, Math.Min(source.Width, source.Height));
 
         using var zoomed = new SKBitmap((int)(source.Width * scale), (int)(source.Height * scale));
         using var canvas = new SKCanvas(zoomed);
         using var sceneImage = SKImage.FromBitmap(scene);
-        canvas.DrawImage(sceneImage, source, new SKRect(0, 0, zoomed.Width, zoomed.Height), new SKSamplingOptions(SKCubicResampler.Mitchell));
+        canvas.DrawImage(
+            sceneImage,
+            source,
+            new SKRect(0, 0, zoomed.Width, zoomed.Height),
+            new SKSamplingOptions(SKCubicResampler.Mitchell)
+        );
 
         using var image = SKImage.FromBitmap(zoomed);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
@@ -117,5 +147,8 @@ internal static class WallyFinder
     }
 
     private static SKBitmap Decode(string path) =>
-        SKBitmap.Decode(path) ?? throw new InvalidOperationException($"Cannot read '{path}' as an image. Use a PNG or JPEG file.");
+        SKBitmap.Decode(path)
+        ?? throw new InvalidOperationException(
+            $"Cannot read '{path}' as an image. Use a PNG or JPEG file."
+        );
 }

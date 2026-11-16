@@ -11,7 +11,10 @@ public sealed class QuestionAndRequestTests
     [Fact]
     public void Choice_accepts_a_criteria_object()
     {
-        var question = Question.Choice("q", new Dictionary<string, object?> { ["a"] = "desc", ["b"] = null });
+        var question = Question.Choice(
+            "q",
+            new Dictionary<string, object?> { ["a"] = "desc", ["b"] = null }
+        );
         Assert.Equal("choice", question.Type);
         Assert.Equal("q", question.Instructions);
         Assert.Equal("desc", question.Criteria["a"]);
@@ -30,19 +33,25 @@ public sealed class QuestionAndRequestTests
     [Fact]
     public void Choice_rejects_duplicate_tuple_labels()
     {
-        var ex = Assert.Throws<TypeSafeException>(() => Question.Choice("q", ("a", "one"), ("a", "two")));
+        var ex = Assert.Throws<TypeSafeException>(() =>
+            Question.Choice("q", ("a", "one"), ("a", "two"))
+        );
         Assert.Contains("Duplicate choice label \"a\"", ex.Message);
     }
 
     [Fact]
     public void Map_builds_a_question_dictionary_and_rejects_duplicate_names()
     {
-        var questions = Question.Map(("noul", Question.Noul("x")), ("score", Question.Score("y", "low", "high")));
+        var questions = Question.Map(
+            ("noul", Question.Noul("x")),
+            ("score", Question.Score("y", "low", "high"))
+        );
         Assert.Equal(2, questions.Count);
         Assert.IsType<NoulQuestion>(questions["noul"]);
 
         var ex = Assert.Throws<TypeSafeException>(() =>
-            Question.Map(("q", Question.Noul("a")), ("q", Question.Noul("b"))));
+            Question.Map(("q", Question.Noul("a")), ("q", Question.Noul("b")))
+        );
         Assert.Contains("Duplicate question \"q\"", ex.Message);
     }
 
@@ -85,29 +94,64 @@ public sealed class QuestionAndRequestTests
     [Fact]
     public async Task Box_question_is_sent_and_its_answer_is_parsed()
     {
-        var handler = ScriptedHandler.Json(new
-        {
-            model = "jev-preview",
-            answers = new
+        var handler = ScriptedHandler.Json(
+            new
             {
-                dog = new { type = "box", box = new { top = 0.1, bottom = 0.6, left = 0.25, right = 0.75 }, confidence = 0.9 },
-                cat = new { type = "box", box = new { top = 0, bottom = 1, left = 0, right = 1 }, confidence = (double?)null },
-            },
-            usage = new { input_tokens = 1, output_tokens = 1 },
-        });
+                model = "jev-preview",
+                answers = new
+                {
+                    dog = new
+                    {
+                        type = "box",
+                        box = new
+                        {
+                            top = 0.1,
+                            bottom = 0.6,
+                            left = 0.25,
+                            right = 0.75,
+                        },
+                        confidence = 0.9,
+                    },
+                    cat = new
+                    {
+                        type = "box",
+                        box = new
+                        {
+                            top = 0,
+                            bottom = 1,
+                            left = 0,
+                            right = 1,
+                        },
+                        confidence = (double?)null,
+                    },
+                },
+                usage = new { input_tokens = 1, output_tokens = 1 },
+            }
+        );
         using var client = TestClient.Create(handler);
 
-        var result = await client.SystemOneAsync(new SystemOneRequest
-        {
-            State = "s",
-            Questions = Question.Map(("dog", Question.Box(new Dictionary<string, object?> { ["find"] = "the dog" })), ("cat", Question.Box())),
-            Model = "jev-preview",
-        });
+        var result = await client.SystemOneAsync(
+            new SystemOneRequest
+            {
+                State = "s",
+                Questions = Question.Map(
+                    ("dog", Question.Box(new Dictionary<string, object?> { ["find"] = "the dog" })),
+                    ("cat", Question.Box())
+                ),
+                Model = "jev-preview",
+            }
+        );
 
         var questions = handler.Requests[0].Body!.Value.GetProperty("questions");
         Assert.Equal("box", questions.GetProperty("dog").GetProperty("type").GetString());
-        Assert.Equal("the dog", questions.GetProperty("dog").GetProperty("instructions").GetProperty("find").GetString());
-        Assert.Equal(JsonValueKind.Null, questions.GetProperty("cat").GetProperty("instructions").ValueKind);
+        Assert.Equal(
+            "the dog",
+            questions.GetProperty("dog").GetProperty("instructions").GetProperty("find").GetString()
+        );
+        Assert.Equal(
+            JsonValueKind.Null,
+            questions.GetProperty("cat").GetProperty("instructions").ValueKind
+        );
         Assert.False(questions.GetProperty("cat").TryGetProperty("criteria", out _));
 
         var dog = result.GetBox("dog");
@@ -124,8 +168,20 @@ public sealed class QuestionAndRequestTests
     [Fact]
     public void Descriptions_can_be_json_objects()
     {
-        var rich = new Dictionary<string, object?> { ["summary"] = "warm", ["examples"] = new object[] { "hi!", "welcome" } };
-        Assert.Same(rich, Question.Choice("q", new Dictionary<string, object?> { ["friendly"] = rich, ["hostile"] = null }).Criteria["friendly"]);
+        var rich = new Dictionary<string, object?>
+        {
+            ["summary"] = "warm",
+            ["examples"] = new object[] { "hi!", "welcome" },
+        };
+        Assert.Same(
+            rich,
+            Question
+                .Choice(
+                    "q",
+                    new Dictionary<string, object?> { ["friendly"] = rich, ["hostile"] = null }
+                )
+                .Criteria["friendly"]
+        );
         Assert.Same(rich, Question.Score("q", rich, "meh").Criteria[0]);
         Assert.Same(rich, Question.Noul("q", NoulCriteria.Yes(rich)).Criteria!.True);
     }
@@ -135,19 +191,27 @@ public sealed class QuestionAndRequestTests
     {
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);
         using var client = TestClient.Create(handler, o => o.BaseUrl = "https://x.test");
-        var result = await client.SystemOneAsync(new Dictionary<string, object?> { ["a"] = 1 }, new Dictionary<string, Question>
-        {
-            ["q1"] = Question.Noul("x"),
-        });
+        var result = await client.SystemOneAsync(
+            new Dictionary<string, object?> { ["a"] = 1 },
+            new Dictionary<string, Question> { ["q1"] = Question.Noul("x") }
+        );
 
         Assert.Equal("https://x.test/v1/systemone", handler.Requests[0].Url);
         Assert.Equal("POST", handler.Requests[0].Method);
         var body = handler.Requests[0].Body!.Value;
         Assert.Equal("jev-latest", body.GetProperty("model").GetString());
         Assert.Equal(1, body.GetProperty("state").GetProperty("a").GetInt32());
-        Assert.Equal("noul", body.GetProperty("questions").GetProperty("q1").GetProperty("type").GetString());
-        Assert.Equal("x", body.GetProperty("questions").GetProperty("q1").GetProperty("instructions").GetString());
-        Assert.False(body.GetProperty("questions").GetProperty("q1").TryGetProperty("criteria", out _));
+        Assert.Equal(
+            "noul",
+            body.GetProperty("questions").GetProperty("q1").GetProperty("type").GetString()
+        );
+        Assert.Equal(
+            "x",
+            body.GetProperty("questions").GetProperty("q1").GetProperty("instructions").GetString()
+        );
+        Assert.False(
+            body.GetProperty("questions").GetProperty("q1").TryGetProperty("criteria", out _)
+        );
         Assert.Equal(0.5, result.GetNoul("q1").Noul);
     }
 
@@ -159,15 +223,36 @@ public sealed class QuestionAndRequestTests
         var result = await client.SystemOneAsync(
             new Dictionary<string, object?> { ["a"] = 1 },
             ("q1", Question.Noul("x")),
-            ("choice", Question.Choice("which?", ("yes", null), ("no", "negatory"))));
+            ("choice", Question.Choice("which?", ("yes", null), ("no", "negatory")))
+        );
 
         var body = handler.Requests[0].Body!.Value;
         Assert.Equal("jev-latest", body.GetProperty("model").GetString());
         Assert.Equal(1, body.GetProperty("state").GetProperty("a").GetInt32());
-        Assert.Equal("noul", body.GetProperty("questions").GetProperty("q1").GetProperty("type").GetString());
-        Assert.Equal("choice", body.GetProperty("questions").GetProperty("choice").GetProperty("type").GetString());
-        Assert.Equal(JsonValueKind.Null, body.GetProperty("questions").GetProperty("choice").GetProperty("criteria").GetProperty("yes").ValueKind);
-        Assert.Equal("negatory", body.GetProperty("questions").GetProperty("choice").GetProperty("criteria").GetProperty("no").GetString());
+        Assert.Equal(
+            "noul",
+            body.GetProperty("questions").GetProperty("q1").GetProperty("type").GetString()
+        );
+        Assert.Equal(
+            "choice",
+            body.GetProperty("questions").GetProperty("choice").GetProperty("type").GetString()
+        );
+        Assert.Equal(
+            JsonValueKind.Null,
+            body.GetProperty("questions")
+                .GetProperty("choice")
+                .GetProperty("criteria")
+                .GetProperty("yes")
+                .ValueKind
+        );
+        Assert.Equal(
+            "negatory",
+            body.GetProperty("questions")
+                .GetProperty("choice")
+                .GetProperty("criteria")
+                .GetProperty("no")
+                .GetString()
+        );
         Assert.Equal(0.5, result.GetNoul("q1").Noul);
     }
 
@@ -176,15 +261,25 @@ public sealed class QuestionAndRequestTests
     {
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);
         using var client = TestClient.Create(handler, o => o.DefaultModel = "client-default");
-        await client.SystemOneAsync("s", new Dictionary<string, Question>
-        {
-            ["q"] = Question.Choice("c", new Dictionary<string, object?> { ["a"] = null }),
-        });
-        await client.SystemOneAsync("s", new Dictionary<string, Question>
-        {
-            ["q"] = Question.Choice("c", new Dictionary<string, object?> { ["a"] = null }),
-        }, model: "per-call");
-        Assert.Equal("client-default", handler.Requests[0].Body!.Value.GetProperty("model").GetString());
+        await client.SystemOneAsync(
+            "s",
+            new Dictionary<string, Question>
+            {
+                ["q"] = Question.Choice("c", new Dictionary<string, object?> { ["a"] = null }),
+            }
+        );
+        await client.SystemOneAsync(
+            "s",
+            new Dictionary<string, Question>
+            {
+                ["q"] = Question.Choice("c", new Dictionary<string, object?> { ["a"] = null }),
+            },
+            model: "per-call"
+        );
+        Assert.Equal(
+            "client-default",
+            handler.Requests[0].Body!.Value.GetProperty("model").GetString()
+        );
         Assert.Equal("per-call", handler.Requests[1].Body!.Value.GetProperty("model").GetString());
     }
 
@@ -193,25 +288,48 @@ public sealed class QuestionAndRequestTests
     {
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);
         using var client = TestClient.Create(handler);
-        await client.SystemOneAsync(new SystemOneRequest
-        {
-            State = null,
-            Questions = new Dictionary<string, Question>
+        await client.SystemOneAsync(
+            new SystemOneRequest
             {
-                ["noul"] = Question.Noul(null, new NoulCriteria(null, null)),
-                ["noCriteria"] = Question.Noul(null, null, includeCriteria: true),
-                ["choice"] = Question.Choice(null, new Dictionary<string, object?> { ["yes"] = null, ["no"] = null }),
-                ["score"] = Question.Score(null, new object?[] { null, "high" }),
-            },
-        });
+                State = null,
+                Questions = new Dictionary<string, Question>
+                {
+                    ["noul"] = Question.Noul(null, new NoulCriteria(null, null)),
+                    ["noCriteria"] = Question.Noul(null, null, includeCriteria: true),
+                    ["choice"] = Question.Choice(
+                        null,
+                        new Dictionary<string, object?> { ["yes"] = null, ["no"] = null }
+                    ),
+                    ["score"] = Question.Score(null, new object?[] { null, "high" }),
+                },
+            }
+        );
 
         var questions = handler.Requests[0].Body!.Value.GetProperty("questions");
-        Assert.Equal(JsonValueKind.Null, handler.Requests[0].Body!.Value.GetProperty("state").ValueKind);
-        Assert.Equal(JsonValueKind.Null, questions.GetProperty("noul").GetProperty("instructions").ValueKind);
-        Assert.Equal(JsonValueKind.Null, questions.GetProperty("noul").GetProperty("criteria").GetProperty("true").ValueKind);
-        Assert.Equal(JsonValueKind.Null, questions.GetProperty("noCriteria").GetProperty("criteria").ValueKind);
-        Assert.Equal(JsonValueKind.Null, questions.GetProperty("choice").GetProperty("criteria").GetProperty("yes").ValueKind);
-        Assert.Equal(JsonValueKind.Null, questions.GetProperty("score").GetProperty("criteria")[0].ValueKind);
+        Assert.Equal(
+            JsonValueKind.Null,
+            handler.Requests[0].Body!.Value.GetProperty("state").ValueKind
+        );
+        Assert.Equal(
+            JsonValueKind.Null,
+            questions.GetProperty("noul").GetProperty("instructions").ValueKind
+        );
+        Assert.Equal(
+            JsonValueKind.Null,
+            questions.GetProperty("noul").GetProperty("criteria").GetProperty("true").ValueKind
+        );
+        Assert.Equal(
+            JsonValueKind.Null,
+            questions.GetProperty("noCriteria").GetProperty("criteria").ValueKind
+        );
+        Assert.Equal(
+            JsonValueKind.Null,
+            questions.GetProperty("choice").GetProperty("criteria").GetProperty("yes").ValueKind
+        );
+        Assert.Equal(
+            JsonValueKind.Null,
+            questions.GetProperty("score").GetProperty("criteria")[0].ValueKind
+        );
         Assert.Equal("high", questions.GetProperty("score").GetProperty("criteria")[1].GetString());
     }
 
@@ -220,14 +338,31 @@ public sealed class QuestionAndRequestTests
     {
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);
         using var client = TestClient.Create(handler);
-        await client.SystemOneAsync("s", new Dictionary<string, Question>
-        {
-            ["choice"] = Question.Choice("which?", new Dictionary<string, object?> { ["a"] = null, ["b"] = null }),
-            ["score"] = Question.Score("q", "bad", "ok", "great"),
-        });
+        await client.SystemOneAsync(
+            "s",
+            new Dictionary<string, Question>
+            {
+                ["choice"] = Question.Choice(
+                    "which?",
+                    new Dictionary<string, object?> { ["a"] = null, ["b"] = null }
+                ),
+                ["score"] = Question.Score("q", "bad", "ok", "great"),
+            }
+        );
         var questions = handler.Requests[0].Body!.Value.GetProperty("questions");
-        Assert.Equal(JsonValueKind.Null, questions.GetProperty("choice").GetProperty("criteria").GetProperty("a").ValueKind);
-        Assert.Equal(new[] { "bad", "ok", "great" }, questions.GetProperty("score").GetProperty("criteria").EnumerateArray().Select(x => x.GetString()).ToArray());
+        Assert.Equal(
+            JsonValueKind.Null,
+            questions.GetProperty("choice").GetProperty("criteria").GetProperty("a").ValueKind
+        );
+        Assert.Equal(
+            new[] { "bad", "ok", "great" },
+            questions
+                .GetProperty("score")
+                .GetProperty("criteria")
+                .EnumerateArray()
+                .Select(x => x.GetString())
+                .ToArray()
+        );
     }
 
     [Fact]
@@ -236,14 +371,22 @@ public sealed class QuestionAndRequestTests
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);
         using var client = TestClient.Create(handler);
         var empty = Assert.Throws<TypeSafeException>(() =>
-            client.SystemOneAsync("s", new Dictionary<string, Question>()).GetAwaiter().GetResult());
+            client.SystemOneAsync("s", new Dictionary<string, Question>()).GetAwaiter().GetResult()
+        );
         Assert.Contains("At least one question is required", empty.Message);
 
         var shortScore = Assert.Throws<TypeSafeException>(() =>
-            client.SystemOneAsync("s", new Dictionary<string, Question>
-            {
-                ["q"] = Question.Score("?", new object?[] { "only" }),
-            }).GetAwaiter().GetResult());
+            client
+                .SystemOneAsync(
+                    "s",
+                    new Dictionary<string, Question>
+                    {
+                        ["q"] = Question.Score("?", new object?[] { "only" }),
+                    }
+                )
+                .GetAwaiter()
+                .GetResult()
+        );
         Assert.Contains("at least two scores", shortScore.Message);
         Assert.Empty(handler.Requests);
     }
@@ -251,26 +394,34 @@ public sealed class QuestionAndRequestTests
     [Fact]
     public async Task Choice_answers_carry_the_winning_label()
     {
-        var handler = ScriptedHandler.Json(new
-        {
-            model = "m",
-            answers = new
+        var handler = ScriptedHandler.Json(
+            new
             {
-                q = new
+                model = "m",
+                answers = new
                 {
-                    type = "choice",
-                    choice = "b",
-                    confidence = 0.9,
-                    probabilities = new { a = 0.1, b = 0.9 },
+                    q = new
+                    {
+                        type = "choice",
+                        choice = "b",
+                        confidence = 0.9,
+                        probabilities = new { a = 0.1, b = 0.9 },
+                    },
                 },
-            },
-            usage = new { input_tokens = 1, output_tokens = 1 },
-        });
+                usage = new { input_tokens = 1, output_tokens = 1 },
+            }
+        );
         using var client = TestClient.Create(handler);
-        var result = await client.SystemOneAsync("s", new Dictionary<string, Question>
-        {
-            ["q"] = Question.Choice("q", new Dictionary<string, object?> { ["a"] = null, ["b"] = null }),
-        });
+        var result = await client.SystemOneAsync(
+            "s",
+            new Dictionary<string, Question>
+            {
+                ["q"] = Question.Choice(
+                    "q",
+                    new Dictionary<string, object?> { ["a"] = null, ["b"] = null }
+                ),
+            }
+        );
         Assert.Equal("b", result.GetChoice("q").Choice);
         Assert.Equal(0.9, result.GetChoice("q").Confidence);
         Assert.Equal(0.1, result.GetChoice("q").Probabilities["a"]);
@@ -279,31 +430,35 @@ public sealed class QuestionAndRequestTests
     [Fact]
     public async Task Usage_allows_null_or_missing_token_counts()
     {
-        var handler = ScriptedHandler.Json(new
-        {
-            model = "m",
-            answers = new { q = new { type = "noul", noul = 0.5 } },
-            usage = new { input_tokens = (int?)null, output_tokens = 7 },
-        });
+        var handler = ScriptedHandler.Json(
+            new
+            {
+                model = "m",
+                answers = new { q = new { type = "noul", noul = 0.5 } },
+                usage = new { input_tokens = (int?)null, output_tokens = 7 },
+            }
+        );
         using var client = TestClient.Create(handler);
-        var result = await client.SystemOneAsync("s", new Dictionary<string, Question>
-        {
-            ["q"] = Question.Noul("?"),
-        });
+        var result = await client.SystemOneAsync(
+            "s",
+            new Dictionary<string, Question> { ["q"] = Question.Noul("?") }
+        );
         Assert.Null(result.Usage.InputTokens);
         Assert.Equal(7, result.Usage.OutputTokens);
 
-        var missing = ScriptedHandler.Json(new
-        {
-            model = "m",
-            answers = new { q = new { type = "noul", noul = 0.5 } },
-            usage = new { },
-        });
+        var missing = ScriptedHandler.Json(
+            new
+            {
+                model = "m",
+                answers = new { q = new { type = "noul", noul = 0.5 } },
+                usage = new { },
+            }
+        );
         using var missingClient = TestClient.Create(missing);
-        var missingResult = await missingClient.SystemOneAsync("s", new Dictionary<string, Question>
-        {
-            ["q"] = Question.Noul("?"),
-        });
+        var missingResult = await missingClient.SystemOneAsync(
+            "s",
+            new Dictionary<string, Question> { ["q"] = Question.Noul("?") }
+        );
         Assert.Null(missingResult.Usage.InputTokens);
         Assert.Null(missingResult.Usage.OutputTokens);
     }
@@ -313,16 +468,21 @@ public sealed class QuestionAndRequestTests
     {
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);
         using var client = TestClient.Create(handler);
-        await client.SystemOneAsync(new SystemOneRequest
-        {
-            State = "s",
-            Questions = new Dictionary<string, Question> { ["q"] = Question.Score("?", "low", "high") },
-            Extra = new Dictionary<string, object?>
+        await client.SystemOneAsync(
+            new SystemOneRequest
             {
-                ["future_option"] = null,
-                ["nested"] = new Dictionary<string, object?> { ["enabled"] = true },
-            },
-        });
+                State = "s",
+                Questions = new Dictionary<string, Question>
+                {
+                    ["q"] = Question.Score("?", "low", "high"),
+                },
+                Extra = new Dictionary<string, object?>
+                {
+                    ["future_option"] = null,
+                    ["nested"] = new Dictionary<string, object?> { ["enabled"] = true },
+                },
+            }
+        );
         var body = handler.Requests[0].Body!.Value;
         Assert.Equal(JsonValueKind.Null, body.GetProperty("future_option").ValueKind);
         Assert.True(body.GetProperty("nested").GetProperty("enabled").GetBoolean());
@@ -391,14 +551,16 @@ public sealed class QuestionAndRequestTests
                 ["Authorization"] = "nope",
             };
         });
-        await client.Models.ListAsync(new RequestOptions
-        {
-            Headers = new Dictionary<string, string>
+        await client.Models.ListAsync(
+            new RequestOptions
             {
-                ["X-Trace"] = "call",
-                ["X-Only-Call"] = "yes",
-            },
-        });
+                Headers = new Dictionary<string, string>
+                {
+                    ["X-Trace"] = "call",
+                    ["X-Only-Call"] = "yes",
+                },
+            }
+        );
         var headers = handler.Requests[0].Headers;
         Assert.Equal("call", headers["X-Trace"]);
         Assert.Equal("yes", headers["X-Only-Default"]);
@@ -409,14 +571,18 @@ public sealed class QuestionAndRequestTests
     [Fact]
     public async Task WithResponse_exposes_request_id()
     {
-        var handler = new ScriptedHandler((_, _) => ScriptedHandler.JsonResponse(
-            Fixtures.SystemOne,
-            headers: new Dictionary<string, string> { ["x-typesafe-request-id"] = "req_1" }));
+        var handler = new ScriptedHandler(
+            (_, _) =>
+                ScriptedHandler.JsonResponse(
+                    Fixtures.SystemOne,
+                    headers: new Dictionary<string, string> { ["x-typesafe-request-id"] = "req_1" }
+                )
+        );
         using var client = TestClient.Create(handler);
-        var result = await client.SystemOneWithResponseAsync("s", new Dictionary<string, Question>
-        {
-            ["q1"] = Question.Noul("?"),
-        });
+        var result = await client.SystemOneWithResponseAsync(
+            "s",
+            new Dictionary<string, Question> { ["q1"] = Question.Noul("?") }
+        );
         Assert.Equal("req_1", result.RequestId);
         Assert.Equal("m", result.Data.Model);
         Assert.Equal(10_000, client.TimeoutMs);

@@ -318,8 +318,9 @@ dotnet_diagnostic.IDE0044.severity = warning
 # IDE0051: Remove unused private members
 dotnet_diagnostic.IDE0051.severity = warning
 
-# IDE0055: All formatting rules (suggestion — does not fail the build)
-dotnet_diagnostic.IDE0055.severity = suggestion
+# IDE0055: All formatting rules. Off because CSharpier owns whitespace and layout
+# (`dotnet csharpier check .`), and its layout differs from the IDE formatter's.
+dotnet_diagnostic.IDE0055.severity = none
 
 # IDE0059: Unnecessary assignment to a value
 dotnet_diagnostic.IDE0059.severity = warning

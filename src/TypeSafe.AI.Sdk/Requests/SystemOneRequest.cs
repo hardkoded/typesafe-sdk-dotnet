@@ -10,7 +10,8 @@ public sealed class SystemOneRequest
     public object? State { get; set; }
 
     /// <summary>Nonempty questions keyed by the names used to identify their answers.</summary>
-    public IDictionary<string, Question> Questions { get; set; } = new Dictionary<string, Question>();
+    public IDictionary<string, Question> Questions { get; set; } =
+        new Dictionary<string, Question>();
 
     /// <summary>Model override; omitted values inherit the client <c>defaultModel</c>.</summary>
     public string? Model { get; set; }
