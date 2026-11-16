@@ -28,13 +28,15 @@ public interface ITypeSafeClient
     Task<SystemOneResult> SystemOneAsync(
         SystemOneRequest request,
         RequestOptions? options = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>Answer named questions and return the HTTP response metadata.</summary>
     Task<TypeSafeResponse<SystemOneResult>> SystemOneWithResponseAsync(
         SystemOneRequest request,
         RequestOptions? options = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>Answer named questions about text or structured state.</summary>
     Task<SystemOneResult> SystemOneAsync(
@@ -42,7 +44,8 @@ public interface ITypeSafeClient
         IDictionary<string, Question> questions,
         string? model = null,
         RequestOptions? options = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>Answer named questions and return the HTTP response metadata.</summary>
     Task<TypeSafeResponse<SystemOneResult>> SystemOneWithResponseAsync(
@@ -50,7 +53,8 @@ public interface ITypeSafeClient
         IDictionary<string, Question> questions,
         string? model = null,
         RequestOptions? options = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Answer named questions about text or structured state.
@@ -58,7 +62,8 @@ public interface ITypeSafeClient
     /// </summary>
     Task<SystemOneResult> SystemOneAsync(
         object? state,
-        params (string Name, Question Question)[] questions);
+        params (string Name, Question Question)[] questions
+    );
 
     /// <summary>
     /// Answer named questions and return the HTTP response metadata.
@@ -66,5 +71,6 @@ public interface ITypeSafeClient
     /// </summary>
     Task<TypeSafeResponse<SystemOneResult>> SystemOneWithResponseAsync(
         object? state,
-        params (string Name, Question Question)[] questions);
+        params (string Name, Question Question)[] questions
+    );
 }

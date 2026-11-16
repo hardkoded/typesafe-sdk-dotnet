@@ -22,28 +22,47 @@ public static class RetryCalculator
     /// </summary>
     public static int? ParseRetryAfter(HttpResponseHeaders headers, DateTimeOffset? now = null)
     {
-        if (TryGetHeader(headers, "retry-after-ms", out var retryAfterMsRaw)
-            && double.TryParse(retryAfterMsRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out var ms)
+        if (
+            TryGetHeader(headers, "retry-after-ms", out var retryAfterMsRaw)
+            && double.TryParse(
+                retryAfterMsRaw,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out var ms
+            )
             && ms >= 0
             && !double.IsNaN(ms)
-            && !double.IsInfinity(ms))
+            && !double.IsInfinity(ms)
+        )
         {
             return (int)ms;
         }
 
-        if (!TryGetHeader(headers, "Retry-After", out var raw) && !TryGetHeader(headers, "retry-after", out raw))
+        if (
+            !TryGetHeader(headers, "Retry-After", out var raw)
+            && !TryGetHeader(headers, "retry-after", out raw)
+        )
         {
             return null;
         }
 
-        if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds)
+        if (
+            double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds)
             && !double.IsNaN(seconds)
-            && !double.IsInfinity(seconds))
+            && !double.IsInfinity(seconds)
+        )
         {
             return seconds >= 0 ? (int)(seconds * 1000) : null;
         }
 
-        if (DateTimeOffset.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var date))
+        if (
+            DateTimeOffset.TryParse(
+                raw,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal,
+                out var date
+            )
+        )
         {
             var delay = date - (now ?? DateTimeOffset.UtcNow);
             return (int)Math.Max(0, delay.TotalMilliseconds);
@@ -60,7 +79,8 @@ public static class RetryCalculator
         int attempt,
         HttpResponseHeaders? headers = null,
         RetryPolicy? policy = null,
-        Func<double>? random = null)
+        Func<double>? random = null
+    )
     {
         policy ??= RetryPolicy.Default;
         if (policy.RespectRetryAfter && headers is not null)
@@ -72,14 +92,19 @@ public static class RetryCalculator
             }
         }
 
-        var exponential = Math.Min(policy.BackoffInitialMs * Math.Pow(2, attempt), policy.BackoffMaxMs);
+        var exponential = Math.Min(
+            policy.BackoffInitialMs * Math.Pow(2, attempt),
+            policy.BackoffMaxMs
+        );
         var sample = random?.Invoke() ?? NextDouble();
         return (int)Math.Round(exponential * (1 - sample * policy.BackoffJitter));
     }
 
     /// <summary>Wait <paramref name="milliseconds"/>, throwing <see cref="OperationCanceledException"/> on cancellation.</summary>
-    public static Task SleepAsync(int milliseconds, CancellationToken cancellationToken = default) =>
-        Task.Delay(milliseconds, cancellationToken);
+    public static Task SleepAsync(
+        int milliseconds,
+        CancellationToken cancellationToken = default
+    ) => Task.Delay(milliseconds, cancellationToken);
 
 #if !NET6_0_OR_GREATER
     private static readonly object s_randomLock = new();

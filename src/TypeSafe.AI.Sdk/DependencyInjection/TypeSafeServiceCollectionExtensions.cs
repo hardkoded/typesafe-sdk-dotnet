@@ -18,7 +18,8 @@ public static class TypeSafeServiceCollectionExtensions
     /// </summary>
     public static IHttpClientBuilder AddTypeSafeClient(
         this IServiceCollection services,
-        Action<TypeSafeClientOptions>? configure = null)
+        Action<TypeSafeClientOptions>? configure = null
+    )
     {
 #if NET
         ArgumentNullException.ThrowIfNull(services);
@@ -35,13 +36,20 @@ public static class TypeSafeServiceCollectionExtensions
         }
         else
         {
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<TypeSafeClientOptions>, UnconfiguredTypeSafeClientOptions>());
+            services.TryAddEnumerable(
+                ServiceDescriptor.Singleton<
+                    IConfigureOptions<TypeSafeClientOptions>,
+                    UnconfiguredTypeSafeClientOptions
+                >()
+            );
         }
 
         services.TryAddSingleton<ITypeSafeLogger>(sp =>
         {
             var logger = sp.GetService<ILogger<TypeSafeClient>>();
-            return logger is null ? new ConsoleTypeSafeLogger() : new MicrosoftLoggingTypeSafeLogger(logger);
+            return logger is null
+                ? new ConsoleTypeSafeLogger()
+                : new MicrosoftLoggingTypeSafeLogger(logger);
         });
 
         var builder = services.AddHttpClient(TypeSafeClient.HttpClientName, client =>
@@ -58,7 +66,8 @@ public static class TypeSafeServiceCollectionExtensions
     {
         var factory = sp.GetRequiredService<IHttpClientFactory>();
         var http = factory.CreateClient(TypeSafeClient.HttpClientName);
-        var options = sp.GetService<IOptions<TypeSafeClientOptions>>()?.Value ?? new TypeSafeClientOptions();
+        var options = sp.GetService<IOptions<TypeSafeClientOptions>>()?.Value
+            ?? new TypeSafeClientOptions();
         if (options.Logger is null)
         {
             options.Logger = sp.GetService<ITypeSafeLogger>();
@@ -67,7 +76,8 @@ public static class TypeSafeServiceCollectionExtensions
         return new TypeSafeClient(http, options);
     }
 
-    private sealed class UnconfiguredTypeSafeClientOptions : IConfigureOptions<TypeSafeClientOptions>
+    private sealed class UnconfiguredTypeSafeClientOptions
+        : IConfigureOptions<TypeSafeClientOptions>
     {
         public void Configure(TypeSafeClientOptions options)
         {

@@ -14,15 +14,18 @@ if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(Env.ApiKey)))
 using var client = new TypeSafeClient();
 
 var result = await client.SystemOneAsync(
-    new
-    {
-        document = "I was charged twice. Please fix this ASAP.",
-    },
-    ("category", Question.Choice("What is this ticket about?",
-        ("billing", "Payments, invoicing, refunds"),
-        ("technical", "Bugs, outages, integrations"),
-        ("other", null))),
-    ("urgent", Question.Noul("Does this convey urgency?")));
+    new { document = "I was charged twice. Please fix this ASAP." },
+    (
+        "category",
+        Question.Choice(
+            "What is this ticket about?",
+            ("billing", "Payments, invoicing, refunds"),
+            ("technical", "Bugs, outages, integrations"),
+            ("other", null)
+        )
+    ),
+    ("urgent", Question.Noul("Does this convey urgency?"))
+);
 
 var category = result.GetChoice("category");
 var urgent = result.GetNoul("urgent");
@@ -30,5 +33,7 @@ var urgent = result.GetNoul("urgent");
 Console.WriteLine($"model:      {result.Model}");
 Console.WriteLine($"category:   {category.Choice} (confidence {category.Confidence:0.00})");
 Console.WriteLine($"urgent:     {urgent.Noul:0.00}");
-Console.WriteLine($"usage:      {result.Usage.InputTokens?.ToString() ?? "n/a"} in / {result.Usage.OutputTokens?.ToString() ?? "n/a"} out");
+Console.WriteLine(
+    $"usage:      {result.Usage.InputTokens?.ToString() ?? "n/a"} in / {result.Usage.OutputTokens?.ToString() ?? "n/a"} out"
+);
 return 0;

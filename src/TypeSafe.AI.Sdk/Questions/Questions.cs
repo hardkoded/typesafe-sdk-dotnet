@@ -33,13 +33,21 @@ public abstract class Question
     /// <param name="instructions">The question as text, a JSON object or array; defaults to <c>null</c>.</param>
     /// <param name="criteria">Optional descriptions of the yes and no outcomes.</param>
     public static NoulQuestion Noul(object? instructions = null, NoulCriteria? criteria = null) =>
-        new(instructions, criteria, includeInstructions: true, includeCriteria: criteria is not null);
+        new(
+            instructions,
+            criteria,
+            includeInstructions: true,
+            includeCriteria: criteria is not null
+        );
 
     /// <summary>
     /// Create a yes/no question, including an explicit <c>null</c> criteria value on the wire.
     /// </summary>
-    public static NoulQuestion Noul(object? instructions, NoulCriteria? criteria, bool includeCriteria) =>
-        new(instructions, criteria, includeInstructions: true, includeCriteria: includeCriteria);
+    public static NoulQuestion Noul(
+        object? instructions,
+        NoulCriteria? criteria,
+        bool includeCriteria
+    ) => new(instructions, criteria, includeInstructions: true, includeCriteria: includeCriteria);
 
     /// <summary>
     /// Create a question that selects between named alternatives.
@@ -47,19 +55,26 @@ public abstract class Question
     /// </summary>
     /// <param name="instructions">The question as text, a JSON object or array, or <c>null</c>.</param>
     /// <param name="criteria">Labels mapped to descriptions, or <c>null</c> for undescribed labels.</param>
-    public static ChoiceQuestion Choice(object? instructions, IReadOnlyDictionary<string, object?> criteria)
+    public static ChoiceQuestion Choice(
+        object? instructions,
+        IReadOnlyDictionary<string, object?> criteria
+    )
     {
         if (criteria is IList)
         {
-            throw new TypeSafeException("Choice criteria must be a map of labels to descriptions, not a list.");
+            throw new TypeSafeException(
+                "Choice criteria must be a map of labels to descriptions, not a list."
+            );
         }
 
         return new ChoiceQuestion(instructions, criteria, includeInstructions: true);
     }
 
     /// <inheritdoc cref="Choice(object?, IReadOnlyDictionary{string, object?})" />
-    public static ChoiceQuestion Choice(object? instructions, Dictionary<string, object?> criteria) =>
-        Choice(instructions, (IReadOnlyDictionary<string, object?>)criteria);
+    public static ChoiceQuestion Choice(
+        object? instructions,
+        Dictionary<string, object?> criteria
+    ) => Choice(instructions, (IReadOnlyDictionary<string, object?>)criteria);
 
     /// <summary>
     /// Create a question that selects between named alternatives, from label/description pairs.
@@ -67,16 +82,17 @@ public abstract class Question
     /// </summary>
     public static ChoiceQuestion Choice(
         object? instructions,
-        params (string Label, object? Description)[] criteria) =>
-        Choice(instructions, NamedMap(criteria, "choice label"));
+        params (string Label, object? Description)[] criteria
+    ) => Choice(instructions, NamedMap(criteria, "choice label"));
 
     /// <summary>
     /// Build a name → question map from labeled pairs. Duplicate names throw.
     /// Use this when you need a dictionary (for example <see cref="SystemOneRequest.Questions"/>,
     /// or a <c>model</c> / cancellation token on the dictionary <c>SystemOneAsync</c> overload).
     /// </summary>
-    public static Dictionary<string, Question> Map(params (string Name, Question Question)[] questions) =>
-        NamedMap(questions, "question");
+    public static Dictionary<string, Question> Map(
+        params (string Name, Question Question)[] questions
+    ) => NamedMap(questions, "question");
 
     /// <summary>
     /// Create a score question using an ordered rubric.
@@ -89,7 +105,8 @@ public abstract class Question
         if (criteria is IDictionary)
         {
             throw new TypeSafeException(
-                "Score criteria must be a list of descriptions indexed by score from zero, not a map.");
+                "Score criteria must be a list of descriptions indexed by score from zero, not a map."
+            );
         }
 
         return new ScoreQuestion(instructions, criteria, includeInstructions: true);
@@ -124,14 +141,16 @@ public abstract class Question
             if (score.Criteria.Count < 2)
             {
                 throw new TypeSafeException(
-                    $"Score question \"{pair.Key}\" has {score.Criteria.Count} criteria; at least two scores are required.");
+                    $"Score question \"{pair.Key}\" has {score.Criteria.Count} criteria; at least two scores are required."
+                );
             }
         }
     }
 
     internal static Dictionary<string, TValue> NamedMap<TValue>(
         (string Key, TValue Value)[]? pairs,
-        string itemKind)
+        string itemKind
+    )
     {
         if (pairs is null)
         {
@@ -171,7 +190,12 @@ public sealed class NoulCriteria
     internal bool IncludeFalse { get; }
 
     /// <summary>Create Noul criteria, omitting unspecified sides on the wire.</summary>
-    public NoulCriteria(object? @true = null, object? @false = null, bool includeTrue = true, bool includeFalse = true)
+    public NoulCriteria(
+        object? @true = null,
+        object? @false = null,
+        bool includeTrue = true,
+        bool includeFalse = true
+    )
     {
         True = @true;
         False = @false;
@@ -180,10 +204,12 @@ public sealed class NoulCriteria
     }
 
     /// <summary>Describe only the yes outcome.</summary>
-    public static NoulCriteria Yes(object? meaning) => new(meaning, null, includeTrue: true, includeFalse: false);
+    public static NoulCriteria Yes(object? meaning) =>
+        new(meaning, null, includeTrue: true, includeFalse: false);
 
     /// <summary>Describe only the no outcome.</summary>
-    public static NoulCriteria No(object? meaning) => new(null, meaning, includeTrue: false, includeFalse: true);
+    public static NoulCriteria No(object? meaning) =>
+        new(null, meaning, includeTrue: false, includeFalse: true);
 }
 
 /// <summary>A yes/no question with optional descriptions for either outcome.</summary>
@@ -202,7 +228,8 @@ public sealed class NoulQuestion : Question
         object? instructions = null,
         NoulCriteria? criteria = null,
         bool includeInstructions = true,
-        bool includeCriteria = false)
+        bool includeCriteria = false
+    )
         : base(instructions, includeInstructions)
     {
         Criteria = criteria;
@@ -223,10 +250,14 @@ public sealed class ChoiceQuestion : Question
     public ChoiceQuestion(
         object? instructions,
         IReadOnlyDictionary<string, object?> criteria,
-        bool includeInstructions = true)
+        bool includeInstructions = true
+    )
         : base(instructions, includeInstructions)
     {
-        Criteria = criteria ?? throw new TypeSafeException("Choice criteria must be a map of labels to descriptions, not a list.");
+        Criteria = criteria
+            ?? throw new TypeSafeException(
+                "Choice criteria must be a map of labels to descriptions, not a list."
+            );
     }
 }
 
@@ -243,11 +274,14 @@ public sealed class ScoreQuestion : Question
     public ScoreQuestion(
         object? instructions,
         IReadOnlyList<object?> criteria,
-        bool includeInstructions = true)
+        bool includeInstructions = true
+    )
         : base(instructions, includeInstructions)
     {
-        Criteria = criteria ?? throw new TypeSafeException(
-            "Score criteria must be a list of descriptions indexed by score from zero, not a map.");
+        Criteria = criteria
+            ?? throw new TypeSafeException(
+                "Score criteria must be a list of descriptions indexed by score from zero, not a map."
+            );
     }
 }
 
@@ -259,9 +293,7 @@ public sealed class BoxQuestion : Question
 
     /// <summary>Create a Box question.</summary>
     public BoxQuestion(object? instructions = null, bool includeInstructions = true)
-        : base(instructions, includeInstructions)
-    {
-    }
+        : base(instructions, includeInstructions) { }
 }
 
 internal static class QuestionWire
@@ -277,7 +309,9 @@ internal static class QuestionWire
         switch (question)
         {
             case NoulQuestion noul when noul.IncludeCriteria:
-                node["criteria"] = noul.Criteria is null ? null : ToNoulCriteria(noul.Criteria, assets);
+                node["criteria"] = noul.Criteria is null
+                    ? null
+                    : ToNoulCriteria(noul.Criteria, assets);
                 break;
             case ChoiceQuestion choice:
                 node["criteria"] = ToObject(choice.Criteria, assets);
@@ -306,7 +340,10 @@ internal static class QuestionWire
         return node;
     }
 
-    private static JsonObject ToObject(IReadOnlyDictionary<string, object?> values, AssetContext? assets)
+    private static JsonObject ToObject(
+        IReadOnlyDictionary<string, object?> values,
+        AssetContext? assets
+    )
     {
         var node = new JsonObject();
         foreach (var pair in values)

@@ -69,7 +69,10 @@ public sealed class RetryPolicy
         get;
         set
         {
-            field = value ?? throw new TypeSafeException("`retry.httpStatuses` must contain HTTP status codes, got null.");
+            field = value
+                ?? throw new TypeSafeException(
+                    "`retry.httpStatuses` must contain HTTP status codes, got null."
+                );
             HttpStatusesSpecified = true;
         }
     } = DefaultHttpStatuses();
@@ -154,12 +157,18 @@ public sealed class RetryPolicy
 
         if (overrides.BackoffInitialMsSpecified)
         {
-            merged.BackoffInitialMs = Guards.NonNegativeMs("retry.backoffInitialMs", overrides.BackoffInitialMs);
+            merged.BackoffInitialMs = Guards.NonNegativeMs(
+                "retry.backoffInitialMs",
+                overrides.BackoffInitialMs
+            );
         }
 
         if (overrides.BackoffMaxMsSpecified)
         {
-            merged.BackoffMaxMs = Guards.NonNegativeMs("retry.backoffMaxMs", overrides.BackoffMaxMs);
+            merged.BackoffMaxMs = Guards.NonNegativeMs(
+                "retry.backoffMaxMs",
+                overrides.BackoffMaxMs
+            );
         }
 
         if (overrides.BackoffJitterSpecified)
@@ -169,7 +178,9 @@ public sealed class RetryPolicy
 
         if (overrides.HttpStatusesSpecified)
         {
-            merged.HttpStatuses = new HashSet<int>(Guards.StatusSet("retry.httpStatuses", overrides.HttpStatuses));
+            merged.HttpStatuses = new HashSet<int>(
+                Guards.StatusSet("retry.httpStatuses", overrides.HttpStatuses)
+            );
         }
 
         if (overrides.RespectRetryAfterSpecified)
@@ -179,7 +190,10 @@ public sealed class RetryPolicy
 
         if (overrides.MaxRetryAfterMsSpecified)
         {
-            merged.MaxRetryAfterMs = Guards.NonNegativeMs("retry.maxRetryAfterMs", overrides.MaxRetryAfterMs);
+            merged.MaxRetryAfterMs = Guards.NonNegativeMs(
+                "retry.maxRetryAfterMs",
+                overrides.MaxRetryAfterMs
+            );
         }
 
         if (overrides.ApiConnectionErrorSpecified)

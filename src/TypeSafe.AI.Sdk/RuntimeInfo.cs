@@ -14,7 +14,8 @@ public static class RuntimeInfo
     private static string Describe()
     {
         var version = Environment.Version.ToString();
-        var os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win32"
+        var os =
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win32"
             : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "darwin"
             : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux"
             : RuntimeInformation.OSDescription.Split(' ')[0].ToLowerInvariant();

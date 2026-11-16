@@ -48,7 +48,9 @@ public sealed class TextWithAssets
 
     /// <summary>A value as text; a nested sequence is joined with commas, so the images in it are written too.</summary>
     private static string? Stringify(object? value) =>
-        value is IEnumerable items and not string ? string.Join(",", items.Cast<object?>().Select(Stringify)) : value?.ToString();
+        value is IEnumerable items and not string
+            ? string.Join(",", items.Cast<object?>().Select(Stringify))
+            : value?.ToString();
 
     private static TextWithAssets Create(string text, IReadOnlyList<object?> values)
     {
@@ -68,7 +70,11 @@ public sealed class TextWithAssets
         return new TextWithAssets(text, assets.Values.ToList());
     }
 
-    private static void Collect(object? value, Dictionary<string, Image> found, HashSet<object> visited)
+    private static void Collect(
+        object? value,
+        Dictionary<string, Image> found,
+        HashSet<object> visited
+    )
     {
         switch (value)
         {

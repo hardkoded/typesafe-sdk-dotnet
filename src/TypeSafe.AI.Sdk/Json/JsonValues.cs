@@ -58,40 +58,46 @@ internal static class JsonValues
             case bool flag:
                 return JsonValue.Create(flag);
             case byte or sbyte or short or ushort or int or uint or long or ulong:
-                return JsonValue.Create(Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture));
+                return JsonValue.Create(
+                    Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture)
+                );
             case float or double or decimal:
                 return JsonSerializer.SerializeToNode(value, SerializerOptions);
             case IDictionary<string, object?> map:
+            {
+                var obj = new JsonObject();
+                foreach (var pair in map)
                 {
-                    var obj = new JsonObject();
-                    foreach (var pair in map)
-                    {
-                        obj[pair.Key] = ToNode(pair.Value, assets);
-                    }
-
-                    return obj;
+                    obj[pair.Key] = ToNode(pair.Value, assets);
                 }
+
+                return obj;
+            }
             case IDictionary map:
+            {
+                var obj = new JsonObject();
+                foreach (DictionaryEntry entry in map)
                 {
-                    var obj = new JsonObject();
-                    foreach (DictionaryEntry entry in map)
-                    {
-                        obj[Convert.ToString(entry.Key, System.Globalization.CultureInfo.InvariantCulture) ?? ""] =
-                            ToNode(entry.Value, assets);
-                    }
-
-                    return obj;
+                    obj[
+                        Convert.ToString(
+                            entry.Key,
+                            System.Globalization.CultureInfo.InvariantCulture
+                        ) ?? ""
+                    ] = ToNode(entry.Value, assets);
                 }
+
+                return obj;
+            }
             case IEnumerable enumerable when value is not string:
+            {
+                var array = new JsonArray();
+                foreach (var item in enumerable)
                 {
-                    var array = new JsonArray();
-                    foreach (var item in enumerable)
-                    {
-                        array.Add(ToNode(item, assets));
-                    }
-
-                    return array;
+                    array.Add(ToNode(item, assets));
                 }
+
+                return array;
+            }
             default:
                 return SerializeWithAssets(value, assets);
         }
@@ -104,7 +110,8 @@ internal static class JsonValues
             return null;
         }
 
-        var looksJson = contentType?.IndexOf("application/json", StringComparison.OrdinalIgnoreCase) >= 0;
+        var looksJson =
+            contentType?.IndexOf("application/json", StringComparison.OrdinalIgnoreCase) >= 0;
         if (looksJson)
         {
             try
@@ -130,8 +137,11 @@ internal static class JsonValues
 
 internal sealed class ImageConverter : JsonConverter<Image>
 {
-    public override Image Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-        throw new NotSupportedException("Images are write-only.");
+    public override Image Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    ) => throw new NotSupportedException("Images are write-only.");
 
     public override void Write(Utf8JsonWriter writer, Image value, JsonSerializerOptions options) =>
         JsonValues.WriteAssets().WriteImage(value).WriteTo(writer);
@@ -139,9 +149,15 @@ internal sealed class ImageConverter : JsonConverter<Image>
 
 internal sealed class TextWithAssetsConverter : JsonConverter<TextWithAssets>
 {
-    public override TextWithAssets Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-        throw new NotSupportedException("Text with assets is write-only.");
+    public override TextWithAssets Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    ) => throw new NotSupportedException("Text with assets is write-only.");
 
-    public override void Write(Utf8JsonWriter writer, TextWithAssets value, JsonSerializerOptions options) =>
-        JsonValues.WriteAssets().WriteText(value).WriteTo(writer);
+    public override void Write(
+        Utf8JsonWriter writer,
+        TextWithAssets value,
+        JsonSerializerOptions options
+    ) => JsonValues.WriteAssets().WriteText(value).WriteTo(writer);
 }

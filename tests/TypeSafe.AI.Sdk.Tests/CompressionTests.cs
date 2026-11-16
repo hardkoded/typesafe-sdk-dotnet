@@ -12,7 +12,10 @@ namespace TypeSafe.AI.Sdk.Tests;
 public sealed class CompressionTests
 {
     private static Task<SystemOneResult> SendAsync(TypeSafeClient client, string state) =>
-        client.SystemOneAsync(state, new Dictionary<string, Question> { ["q1"] = Question.Noul("x") });
+        client.SystemOneAsync(
+            state,
+            new Dictionary<string, Question> { ["q1"] = Question.Noul("x") }
+        );
 
     [Fact]
     public async Task Large_bodies_are_compressed_with_zstd()
@@ -73,7 +76,9 @@ public sealed class CompressionTests
     public async Task Compression_is_on_by_default_and_cannot_be_overridden_by_a_user_header()
     {
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);
-        using var client = TestClient.Create(handler, o => o.DefaultHeaders = new Dictionary<string, string> { ["Content-Encoding"] = "gzip" });
+        using var client = TestClient.Create(handler, o =>
+            o.DefaultHeaders = new Dictionary<string, string> { ["Content-Encoding"] = "gzip" }
+        );
 
         await SendAsync(client, new string('a', 5000));
 
@@ -86,8 +91,15 @@ public sealed class CompressionTests
     {
         var handler = ScriptedHandler.Sequence(
             ScriptedHandler.JsonResponse(new { }, HttpStatusCode.InternalServerError),
-            ScriptedHandler.JsonResponse(Fixtures.SystemOne));
-        using var client = TestClient.Create(handler, o => o.Retry = new RetryPolicy { MaxRetries = 1, BackoffInitialMs = 1, BackoffMaxMs = 1, BackoffJitter = 0 });
+            ScriptedHandler.JsonResponse(Fixtures.SystemOne)
+        );
+        using var client = TestClient.Create(handler, o => o.Retry = new RetryPolicy
+            {
+                MaxRetries = 1,
+                BackoffInitialMs = 1,
+                BackoffMaxMs = 1,
+                BackoffJitter = 0,
+            });
 
         await SendAsync(client, new string('a', 5000));
 

@@ -26,7 +26,14 @@ public enum TypeSafeLogLevel
 public static class LogLevels
 {
     /// <summary>Canonical names matching the JS SDK: debug, info, warn, error, off.</summary>
-    public static readonly IReadOnlyList<string> All = new[] { "debug", "info", "warn", "error", "off" };
+    public static readonly IReadOnlyList<string> All = new[]
+    {
+        "debug",
+        "info",
+        "warn",
+        "error",
+        "off",
+    };
 
     /// <summary>Default log level (<c>warn</c>).</summary>
     public const TypeSafeLogLevel Default = TypeSafeLogLevel.Warn;
@@ -36,16 +43,22 @@ public static class LogLevels
     {
         switch (value.Trim().ToLowerInvariant())
         {
-            case "debug": return TypeSafeLogLevel.Debug;
-            case "info": return TypeSafeLogLevel.Info;
+            case "debug":
+                return TypeSafeLogLevel.Debug;
+            case "info":
+                return TypeSafeLogLevel.Info;
             case "warn":
-            case "warning": return TypeSafeLogLevel.Warn;
-            case "error": return TypeSafeLogLevel.Error;
+            case "warning":
+                return TypeSafeLogLevel.Warn;
+            case "error":
+                return TypeSafeLogLevel.Error;
             case "off":
-            case "none": return TypeSafeLogLevel.Off;
+            case "none":
+                return TypeSafeLogLevel.Off;
             default:
                 throw new TypeSafeException(
-                    $"Invalid log level \"{value}\" from {source}. Expected one of: {string.Join(", ", All)}.");
+                    $"Invalid log level \"{value}\" from {source}. Expected one of: {string.Join(", ", All)}."
+                );
         }
     }
 
@@ -196,7 +209,12 @@ internal sealed class LevelFilteredLogger : ITypeSafeLogger
 
 internal static class MicrosoftLoggerExtensions
 {
-    public static void Log(this Microsoft.Extensions.Logging.ILogger logger, Microsoft.Extensions.Logging.LogLevel level, string message, object?[] args)
+    public static void Log(
+        this Microsoft.Extensions.Logging.ILogger logger,
+        Microsoft.Extensions.Logging.LogLevel level,
+        string message,
+        object?[] args
+    )
     {
         if (args.Length == 0)
         {

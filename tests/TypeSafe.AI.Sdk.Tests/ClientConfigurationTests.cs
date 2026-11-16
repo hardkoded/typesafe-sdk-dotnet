@@ -48,13 +48,15 @@ public sealed class ClientConfigurationTests
         env.Set(Env.BaseUrl, "https://env.test");
         env.Set(Env.DefaultModel, "env-model");
         env.Set(Env.LogLevel, "debug");
-        using var client = new TypeSafeClient(new TypeSafeClientOptions
-        {
-            ApiKey = "code-key",
-            BaseUrl = "https://code.test",
-            DefaultModel = "code-model",
-            LogLevel = TypeSafeLogLevel.Error,
-        });
+        using var client = new TypeSafeClient(
+            new TypeSafeClientOptions
+            {
+                ApiKey = "code-key",
+                BaseUrl = "https://code.test",
+                DefaultModel = "code-model",
+                LogLevel = TypeSafeLogLevel.Error,
+            }
+        );
         Assert.Equal("https://code.test", client.BaseUrl);
         Assert.Equal("code-model", client.DefaultModel);
         Assert.Equal(TypeSafeLogLevel.Error, client.LogLevel);
@@ -64,7 +66,9 @@ public sealed class ClientConfigurationTests
     public void Keeps_the_api_key_off_public_properties()
     {
         using var env = EnvScope.Clear();
-        using var client = new TypeSafeClient(new TypeSafeClientOptions { ApiKey = "super-secret" });
+        using var client = new TypeSafeClient(
+            new TypeSafeClientOptions { ApiKey = "super-secret" }
+        );
         Assert.Null(client.GetType().GetProperty("ApiKey"));
         Assert.DoesNotContain("super-secret", client.BaseUrl);
         Assert.DoesNotContain("super-secret", $"{client.DefaultModel}{client.TimeoutMs}");
@@ -97,8 +101,16 @@ public sealed class ClientConfigurationTests
     {
         using var env = EnvScope.Clear();
         env.Set(Env.BaseUrl, "https://example.test///");
-        Assert.Equal("https://example.test", new TypeSafeClient(new TypeSafeClientOptions { ApiKey = "k" }).BaseUrl);
-        Assert.Equal("https://x.test", new TypeSafeClient(new TypeSafeClientOptions { ApiKey = "k", BaseUrl = "https://x.test/" }).BaseUrl);
+        Assert.Equal(
+            "https://example.test",
+            new TypeSafeClient(new TypeSafeClientOptions { ApiKey = "k" }).BaseUrl
+        );
+        Assert.Equal(
+            "https://x.test",
+            new TypeSafeClient(
+                new TypeSafeClientOptions { ApiKey = "k", BaseUrl = "https://x.test/" }
+            ).BaseUrl
+        );
     }
 
     [Theory]
@@ -110,7 +122,9 @@ public sealed class ClientConfigurationTests
     public void Accepts_log_level(string name, TypeSafeLogLevel expected)
     {
         using var env = EnvScope.Clear();
-        using var fromCode = new TypeSafeClient(new TypeSafeClientOptions { ApiKey = "k", LogLevelText = name });
+        using var fromCode = new TypeSafeClient(
+            new TypeSafeClientOptions { ApiKey = "k", LogLevelText = name }
+        );
         Assert.Equal(expected, fromCode.LogLevel);
         env.Set(Env.LogLevel, name);
         using var fromEnv = new TypeSafeClient(new TypeSafeClientOptions { ApiKey = "k" });
@@ -122,12 +136,15 @@ public sealed class ClientConfigurationTests
     {
         using var env = EnvScope.Clear();
         env.Set(Env.LogLevel, "loud");
-        var fromEnv = Assert.Throws<TypeSafeException>(() => new TypeSafeClient(new TypeSafeClientOptions { ApiKey = "k" }));
+        var fromEnv = Assert.Throws<TypeSafeException>(() =>
+            new TypeSafeClient(new TypeSafeClientOptions { ApiKey = "k" })
+        );
         Assert.Contains($"\"loud\" from {Env.LogLevel}", fromEnv.Message);
         Assert.Contains("debug, info, warn, error, off", fromEnv.Message);
 
         var fromCode = Assert.Throws<TypeSafeException>(() =>
-            new TypeSafeClient(new TypeSafeClientOptions { ApiKey = "k", LogLevelText = "loud" }));
+            new TypeSafeClient(new TypeSafeClientOptions { ApiKey = "k", LogLevelText = "loud" })
+        );
         Assert.Contains("the `logLevel` option", fromCode.Message);
     }
 }
