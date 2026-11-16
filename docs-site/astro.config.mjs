@@ -48,6 +48,7 @@ export default defineConfig({
             credits: false,
             components: {
                 Footer: "./src/components/Footer.astro",
+                Head: "./src/components/Head.astro",
             },
             sidebar: [
                 { label: "Docs", slug: "docs" },
