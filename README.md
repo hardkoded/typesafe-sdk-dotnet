@@ -82,7 +82,7 @@ To control how an image is named and typed on the wire, set the optional `PartNa
 var photo = new Image(bytes) { PartName = "image-1", FileName = "image-1.png", ContentType = "image/png" };
 ```
 
-To locate something in an image, ask a `Question.Box` question with the `jev-preview` model. The answer's `Box` holds `Top`/`Bottom` (fractions of height) and `Left`/`Right` (fractions of width), and `Confidence` is `null` when the API reports none:
+To locate something in an image, ask a `Question.Box` question with the `jev-preview` model. The answer's `Box` holds `Top`/`Bottom` (fractions of height) and `Left`/`Right` (fractions of width), and `Confidence` is `null` when the API reports none. Choice and score answers expose the same signal as `ReportedConfidence`, while their `Confidence` reads `0` when none is reported. Responses missing a required answer field throw `TypeSafeException`:
 
 ```csharp
 var response = await client.SystemOneAsync(new SystemOneRequest

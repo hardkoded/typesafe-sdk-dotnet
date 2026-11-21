@@ -381,13 +381,13 @@ public sealed class QuestionAndRequestTests
                     "s",
                     new Dictionary<string, Question>
                     {
-                        ["q"] = Question.Score("?", new object?[] { "only" }),
+                        ["q"] = Question.Score("?", new object?[] { }),
                     }
                 )
                 .GetAwaiter()
                 .GetResult()
         );
-        Assert.Contains("at least two scores", shortScore.Message);
+        Assert.Contains("at least one score", shortScore.Message);
         Assert.Empty(handler.Requests);
     }
 

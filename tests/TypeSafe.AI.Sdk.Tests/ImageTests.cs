@@ -476,6 +476,26 @@ public sealed class ImageTests
     }
 
     [Fact]
+    public async Task Request_part_is_bare_application_json_without_a_charset()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+
+        await client.SystemOneAsync(
+            new SystemOneRequest
+            {
+                State = new object?[] { "café ☕", new Image(s_pngBytes) },
+                Questions = Ask(),
+            }
+        );
+
+        var form = Multipart.Parse(handler.Requests[0]);
+        Assert.Equal("application/json", form[0].ContentType);
+        Assert.Equal("image/png", form[1].ContentType);
+        Assert.DoesNotContain("charset", form[0].ContentType);
+    }
+
+    [Fact]
     public async Task Explicit_part_name_file_name_and_content_type_reach_the_wire_and_assets()
     {
         var handler = ScriptedHandler.Json(Fixtures.SystemOne);
@@ -721,9 +741,7 @@ public sealed class ImageTests
                     .Text.RegularExpressions.Regex.Match(headers, "filename=\"?([^\";\\r\\n]+)")
                     .Groups[1]
                     .Value;
-                parts.Add(
-                    new Part(name, type.Split(';')[0], Encoding.Latin1.GetBytes(body), fileName)
-                );
+                parts.Add(new Part(name, type.Trim(), Encoding.Latin1.GetBytes(body), fileName));
             }
 
             return parts;

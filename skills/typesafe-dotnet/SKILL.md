@@ -24,8 +24,8 @@ Live TypeSafe docs remain the source of truth for concepts. This skill covers th
 
 | Need | Primitive | .NET builder | Answer |
 | --- | --- | --- | --- |
-| One of a closed set | Choice | `Question.Choice(instructions, criteria)` | `GetChoice(id).Choice`, `.Probabilities`, `.Confidence` |
-| Degree on ordered levels | Score | `Question.Score(instructions, level0, level1, …)` ≥ 2 levels | `GetScore(id).Score`, `.Legend`, `.Probabilities`, `.Confidence` |
+| One of a closed set | Choice | `Question.Choice(instructions, criteria)` | `GetChoice(id).Choice`, `.Probabilities`, `.Confidence` (`.ReportedConfidence` is `null` when none reported) |
+| Degree on ordered levels | Score | `Question.Score(instructions, level0, level1, …)` ≥ 1 level | `GetScore(id).Score`, `.Legend`, `.Probabilities`, `.Confidence` (`.ReportedConfidence` is `null` when none reported) |
 | Yes / no | Noul | `Question.Noul(instructions, criteria?)` | `GetNoul(id).Noul` in `[0, 1]` — **no** `Confidence` |
 
 - Choice criteria is a **map** of label → description (`null` if the label is enough). Not a list.

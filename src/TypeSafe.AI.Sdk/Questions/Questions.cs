@@ -99,7 +99,7 @@ public abstract class Question
     /// Mirrors JS <c>score()</c>.
     /// </summary>
     /// <param name="instructions">The question as text, a JSON object or array, or <c>null</c>.</param>
-    /// <param name="criteria">At least two descriptions indexed by score from zero; entries may be <c>null</c>.</param>
+    /// <param name="criteria">At least one description indexed by score from zero; entries may be <c>null</c>.</param>
     public static ScoreQuestion Score(object? instructions, IReadOnlyList<object?> criteria)
     {
         if (criteria is IDictionary)
@@ -123,7 +123,7 @@ public abstract class Question
     /// <param name="instructions">What to locate, as text, an asset, a JSON object or array; defaults to <c>null</c>.</param>
     public static BoxQuestion Box(object? instructions = null) => new(instructions);
 
-    /// <summary>Reject empty question sets and score questions without a list of at least two criteria.</summary>
+    /// <summary>Reject empty question sets and score questions without at least one criterion.</summary>
     public static void Validate(IReadOnlyDictionary<string, Question> questions)
     {
         if (questions.Count == 0)
@@ -138,10 +138,10 @@ public abstract class Question
                 continue;
             }
 
-            if (score.Criteria.Count < 2)
+            if (score.Criteria.Count < 1)
             {
                 throw new TypeSafeException(
-                    $"Score question \"{pair.Key}\" has {score.Criteria.Count} criteria; at least two scores are required."
+                    $"Score question \"{pair.Key}\" has {score.Criteria.Count} criteria; at least one score is required."
                 );
             }
         }
