@@ -12,7 +12,7 @@ DI: `TypeSafe.AI.Sdk.DependencyInjection.AddTypeSafeClient`
   - `Models.ListAsync` / `ListWithResponseAsync`
 - `Question.Choice` / `Question.Score` / `Question.Noul` (Choice criteria: tuple pairs or a dictionary)
 - `Question.Map` — name/question pairs → `Dictionary<string, Question>`
-- `Image` (`new Image(bytes)`, `Image.FromFile`, `Image.FromBase64`), `TextWithAssets.From($"...{image}...")` / `TextWithAssets.Join`, `SystemOneRequest.Assets` — experimental images, sent as `multipart/form-data`; opt in with the `TypeSafe-Danger-Zone-Images: true` header
+- `Image` (`new Image(bytes)`, `Image.FromFile`, `Image.FromBase64`), `TextWithAssets.From($"...{image}...")` / `TextWithAssets.Join`, `SystemOneRequest.Assets` — experimental images, sent as `multipart/form-data`; opt in with the `TypeSafe-Danger-Zone-Images: true` header; optional `Image.PartName` / `FileName` / `ContentType` set the multipart part name (default `asset-N`, unique, not `request`), its filename (default: part name) and its content type (default: sniffed)
 - `SystemOneResult.GetChoice` / `GetScore` / `GetNoul` / `Get<T>`
 - `RetryPolicy`, `RequestOptions`, `TypeSafeClientOptions`, `Env`, `SdkVersion`
 

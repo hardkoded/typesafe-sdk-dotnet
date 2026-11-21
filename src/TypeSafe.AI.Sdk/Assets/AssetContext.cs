@@ -1,6 +1,7 @@
 // Copyright (c) Dario Kondratiuk.
 // Licensed under the MIT License.
 
+using System.Net.Http.Headers;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -26,9 +27,16 @@ internal sealed class AssetPart
     /// <summary>The name of the body part that holds the image file bytes.</summary>
     public string Name { get; }
 
-    /// <summary>The content type identified by the file signature, or <c>application/octet-stream</c>.</summary>
+    /// <summary>The file name of the body part: <see cref="Image.FileName"/>, else the part name.</summary>
+    public string FileName => Image.FileName ?? Name;
+
+    /// <summary>
+    /// <see cref="Image.ContentType"/> when set; otherwise the type identified by the file signature, or
+    /// <c>application/octet-stream</c>.
+    /// </summary>
     public string ContentType =>
-        StartsWith(Image.Bytes, s_pngSignature) ? "image/png"
+        Image.ContentType is { } declared ? declared
+        : StartsWith(Image.Bytes, s_pngSignature) ? "image/png"
         : StartsWith(Image.Bytes, s_jpegSignature) ? "image/jpeg"
         : "application/octet-stream";
 
@@ -64,6 +72,9 @@ internal sealed class AssetContext
         "<image:[0-9a-f]{32}>",
         RegexOptions.CultureInvariant
     );
+
+    /// <summary>The name of the multipart part that holds the JSON payload.</summary>
+    internal const string RequestPartName = "request";
 
     private static readonly JsonSerializerOptions s_relaxed = new()
     {
@@ -176,11 +187,64 @@ internal sealed class AssetContext
             );
         }
 
-        // The API accepts each part for only one asset, so an image under several references is sent once per reference.
-        return sent.Select(
-                (entry, index) => new AssetPart(entry.Alias, entry.Image, $"asset-{index}")
+        // The API accepts each part for only one asset, so an image under several references is sent once per
+        // reference, each under its own part name.
+        var parts = sent.Select(
+                (entry, index) =>
+                    new AssetPart(
+                        entry.Alias,
+                        entry.Image,
+                        entry.Image.PartName ?? $"asset-{index}"
+                    )
             )
             .ToList();
+        Validate(parts);
+        return parts;
+    }
+
+    private static void Validate(List<AssetPart> parts)
+    {
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var part in parts)
+        {
+            var image = part.Image;
+            RequireNotBlank(image.PartName, nameof(Image.PartName));
+            RequireNotBlank(image.FileName, nameof(Image.FileName));
+            RequireNotBlank(image.ContentType, nameof(Image.ContentType));
+            if (image.ContentType is { } contentType)
+            {
+                if (!MediaTypeHeaderValue.TryParse(contentType, out _))
+                {
+                    throw new TypeSafeException(
+                        $"Image {nameof(Image.ContentType)} \"{contentType}\" isn't a valid media type."
+                    );
+                }
+            }
+
+            if (part.Name == RequestPartName)
+            {
+                throw new TypeSafeException(
+                    $"Image part name \"{RequestPartName}\" is reserved for the JSON payload; "
+                        + $"choose another {nameof(Image.PartName)}."
+                );
+            }
+
+            if (!names.Add(part.Name))
+            {
+                throw new TypeSafeException(
+                    $"Image part name \"{part.Name}\" is used more than once in the request; "
+                        + $"each image needs a unique {nameof(Image.PartName)}."
+                );
+            }
+        }
+    }
+
+    private static void RequireNotBlank(string? value, string property)
+    {
+        if (value is not null && string.IsNullOrWhiteSpace(value))
+        {
+            throw new TypeSafeException($"Image {property} must not be empty.");
+        }
     }
 
     private static string Unquoted(string json) => json.Substring(1, json.Length - 2);

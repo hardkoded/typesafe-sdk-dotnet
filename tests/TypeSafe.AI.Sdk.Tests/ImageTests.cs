@@ -449,7 +449,237 @@ public sealed class ImageTests
         Assert.Equal(s_pngBytes, Multipart.Parse(handler.Requests[1])[1].Bytes);
     }
 
-    private sealed record Part(string Name, string ContentType, byte[] Bytes)
+    private static SystemOneRequest TwoImages(Image first, Image second) =>
+        new()
+        {
+            State = new object?[] { "text", first, new { note = "json" }, second },
+            Questions = Ask(),
+        };
+
+    private static JsonElement Assets(Part request) =>
+        JsonDocument.Parse(request.Text).RootElement.GetProperty("assets");
+
+    [Fact]
+    public async Task Defaults_name_parts_asset_n_with_the_part_name_as_file_name_and_sniffed_type()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+
+        await client.SystemOneAsync(TwoImages(new Image(s_pngBytes), new Image(s_jpegBytes)));
+
+        var form = Multipart.Parse(handler.Requests[0]);
+        Assert.Equal(new[] { "request", "asset-0", "asset-1" }, form.Select(p => p.Name));
+        Assert.Equal("application/json", form[0].ContentType);
+        Assert.Equal(new[] { "asset-0", "asset-1" }, form.Skip(1).Select(p => p.FileName));
+        Assert.Equal("image/png", form[1].ContentType);
+        Assert.Equal("image/jpeg", form[2].ContentType);
+    }
+
+    [Fact]
+    public async Task Explicit_part_name_file_name_and_content_type_reach_the_wire_and_assets()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+        var photo = new Image(s_pngBytes)
+        {
+            PartName = "image-0",
+            FileName = "unrelated-name.png",
+            ContentType = "image/webp",
+        };
+
+        await client.SystemOneAsync(photo, Ask());
+
+        var form = Multipart.Parse(handler.Requests[0]);
+        Assert.Equal(new[] { "request", "image-0" }, form.Select(p => p.Name));
+        Assert.Equal("unrelated-name.png", form[1].FileName);
+        Assert.Equal("image/webp", form[1].ContentType);
+        var entry = Assets(form[0]).GetProperty(photo.ToString());
+        Assert.Equal("image-0", entry.GetProperty("part").GetString());
+        Assert.Equal("image", entry.GetProperty("type").GetString());
+    }
+
+    [Fact]
+    public async Task Metadata_applies_per_image_and_keeps_the_callers_order()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler, o => o.Compression = false);
+        var png = new Image(s_pngBytes)
+        {
+            PartName = "image-1",
+            FileName = "image-1.png",
+            ContentType = "image/png",
+        };
+        var jpeg = new Image(s_jpegBytes) { PartName = "image-3" };
+
+        await client.SystemOneAsync(TwoImages(png, jpeg));
+
+        var form = Multipart.Parse(handler.Requests[0]);
+        Assert.Equal(new[] { "request", "image-1", "image-3" }, form.Select(p => p.Name));
+        Assert.Equal("application/json", form[0].ContentType);
+        Assert.Equal("image/png", form[1].ContentType);
+        Assert.Equal("image-1.png", form[1].FileName);
+        Assert.Equal(new byte[] { 137, 80, 78, 71 }, form[1].Bytes[..4]);
+        Assert.Equal("image/jpeg", form[2].ContentType);
+        Assert.Equal("image-3", form[2].FileName);
+        Assert.Equal(new byte[] { 255, 216, 255, 224 }, form[2].Bytes[..4]);
+        var parts = Assets(form[0])
+            .EnumerateObject()
+            .Select(p => p.Value.GetProperty("part").GetString());
+        Assert.Equal(new[] { "image-1", "image-3" }, parts);
+    }
+
+    [Fact]
+    public async Task A_duplicate_part_name_throws_before_any_http_call()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+
+        var ex = await Assert.ThrowsAsync<TypeSafeException>(() =>
+            client.SystemOneAsync(
+                TwoImages(
+                    new Image(s_pngBytes) { PartName = "same" },
+                    new Image(s_jpegBytes) { PartName = "same" }
+                )
+            )
+        );
+
+        Assert.Contains("same", ex.Message);
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task An_explicit_name_that_collides_with_a_default_name_throws()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+
+        await Assert.ThrowsAsync<TypeSafeException>(() =>
+            client.SystemOneAsync(
+                TwoImages(new Image(s_pngBytes), new Image(s_jpegBytes) { PartName = "asset-0" })
+            )
+        );
+
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task A_part_name_of_request_throws_before_any_http_call()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+
+        await Assert.ThrowsAsync<TypeSafeException>(() =>
+            client.SystemOneAsync(new Image(s_pngBytes) { PartName = "request" }, Ask())
+        );
+
+        Assert.Empty(handler.Requests);
+    }
+
+    [Theory]
+    [InlineData("", null, null)]
+    [InlineData(null, " ", null)]
+    [InlineData(null, null, "not a media type")]
+    public async Task Blank_or_invalid_metadata_throws_before_any_http_call(
+        string? partName,
+        string? fileName,
+        string? contentType
+    )
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+        var image = new Image(s_pngBytes)
+        {
+            PartName = partName,
+            FileName = fileName,
+            ContentType = contentType,
+        };
+
+        await Assert.ThrowsAsync<TypeSafeException>(() => client.SystemOneAsync(image, Ask()));
+
+        Assert.Empty(handler.Requests);
+    }
+
+    [Theory]
+    [InlineData("__proto__")]
+    [InlineData("constructor")]
+    [InlineData("[photo]")]
+    [InlineData("request")]
+    public async Task Reference_names_stay_free_form_and_are_not_part_names(string reference)
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler);
+        var photo = new Image(s_pngBytes) { PartName = "image-0" };
+
+        await client.SystemOneAsync(
+            new SystemOneRequest
+            {
+                State = $"see {reference}",
+                Questions = Ask(),
+                Assets = new Dictionary<string, Image> { [reference] = photo },
+            }
+        );
+
+        var form = Multipart.Parse(handler.Requests[0]);
+        Assert.Equal(new[] { "request", "image-0" }, form.Select(p => p.Name));
+        Assert.Equal(
+            "image-0",
+            Assets(form[0]).GetProperty(reference).GetProperty("part").GetString()
+        );
+    }
+
+    [Fact]
+    public async Task Success_body_and_headers_stay_readable_after_the_call()
+    {
+        var handler = ScriptedHandler.Json(
+            Fixtures.SystemOne,
+            headers: new Dictionary<string, string> { ["x-typesafe-request-id"] = "req_1" }
+        );
+        using var client = TestClient.Create(handler);
+
+        var response = await client.SystemOneWithResponseAsync(new Image(s_pngBytes), Ask());
+
+        var raw = await response.Response.Content.ReadAsStringAsync();
+        Assert.Equal(JsonSerializer.Serialize(Fixtures.SystemOne), raw);
+        Assert.Equal(
+            "req_1",
+            response.Response.Headers.GetValues("x-typesafe-request-id").Single()
+        );
+    }
+
+    [Fact]
+    public async Task A_caller_user_agent_replaces_the_default_and_danger_zone_headers_reach_the_wire()
+    {
+        var handler = ScriptedHandler.Json(Fixtures.SystemOne);
+        using var client = TestClient.Create(handler, o =>
+            o.DefaultHeaders = new Dictionary<string, string> { ["user-agent"] = "default-agent" }
+        );
+
+        await client.SystemOneAsync(
+            new Image(s_pngBytes),
+            Ask(),
+            options: new RequestOptions
+            {
+                Headers = new Dictionary<string, string>
+                {
+                    ["User-Agent"] = "per-call-agent",
+                    ["TypeSafe-Danger-Zone-Images"] = "true",
+                    ["TypeSafe-Danger-Zone-Long-Context"] = "true",
+                },
+            }
+        );
+
+        var headers = handler.Requests[0].Headers;
+        Assert.Equal("per-call-agent", headers["User-Agent"]);
+        Assert.Equal("true", headers["TypeSafe-Danger-Zone-Images"]);
+        Assert.Equal("true", headers["TypeSafe-Danger-Zone-Long-Context"]);
+    }
+
+    private sealed record Part(
+        string Name,
+        string ContentType,
+        byte[] Bytes,
+        string? FileName = null
+    )
     {
         public string Text => Encoding.UTF8.GetString(Bytes);
     }
@@ -487,7 +717,13 @@ public sealed class ImageTests
                     .Text.RegularExpressions.Regex.Match(headers, "Content-Type: ([^\\r\\n]+)")
                     .Groups[1]
                     .Value;
-                parts.Add(new Part(name, type.Split(';')[0], Encoding.Latin1.GetBytes(body)));
+                var fileName = System
+                    .Text.RegularExpressions.Regex.Match(headers, "filename=\"?([^\";\\r\\n]+)")
+                    .Groups[1]
+                    .Value;
+                parts.Add(
+                    new Part(name, type.Split(';')[0], Encoding.Latin1.GetBytes(body), fileName)
+                );
             }
 
             return parts;

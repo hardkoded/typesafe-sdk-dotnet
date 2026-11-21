@@ -76,6 +76,12 @@ await client.SystemOneAsync(new SystemOneRequest
 });
 ```
 
+To control how an image is named and typed on the wire, set the optional `PartName`, `FileName` and `ContentType` on the `Image`. `PartName` is the multipart part name and the `part` in the request's `assets` entry (default `asset-N`, numbered in order of appearance). `FileName` is the part's `filename` (default: the part name). `ContentType` is the part's `Content-Type` and skips sniffing (default: PNG or JPEG detected from the bytes). Part names must be unique in a request and can't be `request`; otherwise the call throws a `TypeSafeException` before sending. Names you choose in `SystemOneRequest.Assets` are references in the JSON, not part names, and stay free-form.
+
+```csharp
+var photo = new Image(bytes) { PartName = "image-1", FileName = "image-1.png", ContentType = "image/png" };
+```
+
 To locate something in an image, ask a `Question.Box` question with the `jev-preview` model. The answer's `Box` holds `Top`/`Bottom` (fractions of height) and `Left`/`Right` (fractions of width), and `Confidence` is `null` when the API reports none:
 
 ```csharp
@@ -144,11 +150,11 @@ Exceptions mirror the JS hierarchy (`TypeSafeError` → `TypeSafeException`, and
 Versioning is [MinVer](https://github.com/adamralph/minver) from git tags prefixed with `v`:
 
 ```bash
-git tag v0.7.0
+git tag v0.8.0
 dotnet pack src/TypeSafe.AI.Sdk/TypeSafe.AI.Sdk.csproj -c Release -o artifacts
 ```
 
-Without a tag, packs are `0.7.0-preview.0` (or a later preview derived from height).
+Without a tag, packs are `0.8.0-preview.0` (or a later preview derived from height).
 ## Tests
 
 ```bash

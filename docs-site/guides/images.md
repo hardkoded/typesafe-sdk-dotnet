@@ -60,6 +60,23 @@ var response = await client.SystemOneAsync(new SystemOneRequest
 
 Use distinct delimiters, such as `<delivered>`, so references don't match ordinary text. An image in `Assets` that is also placed in content or in `TextWithAssets` is written there as its name. Every name in `Assets` must appear in the request; otherwise the call throws a [TypeSafeException](/api/TypeSafe.AI.Sdk/TypeSafeException/) before sending.
 
+<a id="name-and-type-the-parts"></a>
+
+## Name and type the parts
+
+By default each image is sent as part `asset-N` (numbered in order of appearance), with that name as its file name, and its content type is detected from the bytes. Set `PartName`, `FileName` and `ContentType` on an `Image` to override any of these. `PartName` also becomes the `part` in the request's `assets` entry.
+
+```csharp
+var photo = new Image(bytes)
+{
+    PartName = "image-1",
+    FileName = "image-1.png",
+    ContentType = "image/png",
+};
+```
+
+Part names must be unique within a request and can't be `request`, which is the JSON part. Otherwise the call throws a [TypeSafeException](/api/TypeSafe.AI.Sdk/TypeSafeException/) before sending. Names in `Assets` are references in the JSON, not part names, so they stay free-form.
+
 <a id="locate-something-with-box"></a>
 
 ## Locate something with `Box`
