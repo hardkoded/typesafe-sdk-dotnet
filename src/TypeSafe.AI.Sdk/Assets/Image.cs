@@ -34,6 +34,22 @@ public sealed class Image
         _bytes = data.ToArray();
     }
 
+    /// <summary>
+    /// The name of the multipart part that carries this image, which is also its <c>part</c> in the request's
+    /// <c>assets</c> entry. <c>null</c> (the default) numbers it <c>asset-N</c> in order of appearance. Must be unique
+    /// within a request and can't be <c>request</c>.
+    /// </summary>
+    public string? PartName { get; set; }
+
+    /// <summary>The <c>filename</c> of the part. <c>null</c> (the default) uses the part name.</summary>
+    public string? FileName { get; set; }
+
+    /// <summary>
+    /// The <c>Content-Type</c> of the part, for example <c>image/png</c>. <c>null</c> (the default) detects PNG and JPEG
+    /// from the bytes, else sends <c>application/octet-stream</c>.
+    /// </summary>
+    public string? ContentType { get; set; }
+
     /// <summary>The image file bytes.</summary>
     public ReadOnlyMemory<byte> Data => _bytes;
 

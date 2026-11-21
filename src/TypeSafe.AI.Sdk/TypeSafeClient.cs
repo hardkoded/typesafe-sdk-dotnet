@@ -503,7 +503,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         {
             var content = new ByteArrayContent(asset.Image.Bytes);
             content.Headers.ContentType = new MediaTypeHeaderValue(asset.ContentType);
-            form.Add(content, asset.Name, asset.Name);
+            form.Add(content, asset.Name, asset.FileName);
         }
 
         return form;
@@ -549,7 +549,11 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         // User-supplied headers go first so they can't clobber auth, the content type, or the encoding.
         headers["Authorization"] = $"Bearer {_apiKey}";
         headers["Accept"] = "application/json";
-        headers["User-Agent"] = $"typesafe-sdk-dotnet/{SdkVersion.Current}";
+        if (!userHeaders.ContainsKey("User-Agent"))
+        {
+            headers["User-Agent"] = $"typesafe-sdk-dotnet/{SdkVersion.Current}";
+        }
+
         headers["X-TypeSafe-SDK"] = $"typesafe-sdk-dotnet/{SdkVersion.Current}";
         headers["X-TypeSafe-Runtime"] = RuntimeInfo.Description;
         if (body is not null)
