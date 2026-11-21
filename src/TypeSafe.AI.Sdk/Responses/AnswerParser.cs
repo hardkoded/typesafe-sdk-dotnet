@@ -13,14 +13,18 @@ internal static class AnswerParser
         var element = AsObject(body, "POST /v1/systemone");
         var answers = new Dictionary<string, Answer>(StringComparer.Ordinal);
         if (
-            element.TryGetProperty("answers", out var answersNode)
-            && answersNode.ValueKind == JsonValueKind.Object
+            !element.TryGetProperty("answers", out var answersNode)
+            || answersNode.ValueKind != JsonValueKind.Object
         )
         {
-            foreach (var property in answersNode.EnumerateObject())
-            {
-                answers[property.Name] = ParseAnswer(property.Value, property.Name);
-            }
+            throw new TypeSafeException(
+                "Unexpected response shape from POST /v1/systemone; expected `answers` to be an object."
+            );
+        }
+
+        foreach (var property in answersNode.EnumerateObject())
+        {
+            answers[property.Name] = ParseAnswer(property.Value, property.Name);
         }
 
         var usage = new Usage();
@@ -92,80 +96,116 @@ internal static class AnswerParser
 
         return type switch
         {
-            "noul" => new NoulAnswer
-            {
-                Noul = node.TryGetProperty("noul", out var noul) ? noul.GetDouble() : 0,
-            },
-            "choice" => new ChoiceAnswer
-            {
-                Choice = node.TryGetProperty("choice", out var choice)
-                    ? choice.GetString() ?? ""
-                    : "",
-                Confidence = node.TryGetProperty("confidence", out var confidence)
-                    ? confidence.GetDouble()
-                    : 0,
-                Probabilities = ReadDoubleMap(node, "probabilities"),
-            },
-            "score" => new ScoreAnswer
-            {
-                Score = node.TryGetProperty("score", out var score) ? score.GetDouble() : 0,
-                Confidence = node.TryGetProperty("confidence", out var confidence)
-                    ? confidence.GetDouble()
-                    : 0,
-                Legend = ReadElementMap(node, "legend"),
-                Probabilities = ReadDoubleMap(node, "probabilities"),
-            },
+            "noul" => new NoulAnswer { Noul = RequireNumber(node, "noul", "noul", name) },
+            "choice" => ParseChoice(node, name),
+            "score" => ParseScore(node, name),
             "box" => new BoxAnswer
             {
-                Box = ReadBox(node),
-                Confidence =
-                    node.TryGetProperty("confidence", out var boxConfidence)
-                    && boxConfidence.ValueKind == JsonValueKind.Number
-                        ? boxConfidence.GetDouble()
-                        : null,
+                Box = ReadBox(node, name),
+                Confidence = ReadOptionalNumber(node, "confidence"),
             },
             _ => throw new TypeSafeException($"Unexpected answer type \"{type}\" for \"{name}\"."),
         };
     }
 
-    private static BoxCoordinates ReadBox(JsonElement node)
+    private static ChoiceAnswer ParseChoice(JsonElement node, string name)
+    {
+        if (
+            !node.TryGetProperty("choice", out var choice)
+            || choice.ValueKind != JsonValueKind.String
+        )
+        {
+            throw Malformed("choice", "choice", name, "a string");
+        }
+
+        var reported = ReadOptionalNumber(node, "confidence");
+        return new ChoiceAnswer
+        {
+            Choice = choice.GetString() ?? "",
+            Confidence = reported ?? 0,
+            ReportedConfidence = reported,
+            Probabilities = RequireDoubleMap(node, "choice", name),
+        };
+    }
+
+    private static ScoreAnswer ParseScore(JsonElement node, string name)
+    {
+        var score = RequireNumber(node, "score", "score", name);
+        var reported = ReadOptionalNumber(node, "confidence");
+        return new ScoreAnswer
+        {
+            Score = score,
+            Confidence = reported ?? 0,
+            ReportedConfidence = reported,
+            Legend = ReadElementMap(node, "legend"),
+            Probabilities = RequireDoubleMap(node, "score", name),
+        };
+    }
+
+    private static TypeSafeException Malformed(
+        string type,
+        string field,
+        string name,
+        string expected
+    ) =>
+        new(
+            $"Malformed {type} answer for \"{name}\": field \"{field}\" is missing or is not {expected}."
+        );
+
+    private static double RequireNumber(JsonElement node, string field, string type, string name) =>
+        node.TryGetProperty(field, out var property) && property.ValueKind == JsonValueKind.Number
+            ? property.GetDouble()
+            : throw Malformed(type, field, name, "a number");
+
+    private static double? ReadOptionalNumber(JsonElement node, string field) =>
+        node.TryGetProperty(field, out var property) && property.ValueKind == JsonValueKind.Number
+            ? property.GetDouble()
+            : null;
+
+    private static BoxCoordinates ReadBox(JsonElement node, string name)
     {
         if (!node.TryGetProperty("box", out var box) || box.ValueKind != JsonValueKind.Object)
         {
-            return new BoxCoordinates();
+            throw Malformed("box", "box", name, "an object");
         }
 
         return new BoxCoordinates
         {
-            Top = ReadDouble(box, "top"),
-            Bottom = ReadDouble(box, "bottom"),
-            Left = ReadDouble(box, "left"),
-            Right = ReadDouble(box, "right"),
+            Top = RequireBoxEdge(box, "top", name),
+            Bottom = RequireBoxEdge(box, "bottom", name),
+            Left = RequireBoxEdge(box, "left", name),
+            Right = RequireBoxEdge(box, "right", name),
         };
     }
 
-    private static double ReadDouble(JsonElement node, string name) =>
-        node.TryGetProperty(name, out var property) && property.ValueKind == JsonValueKind.Number
+    private static double RequireBoxEdge(JsonElement box, string edge, string name) =>
+        box.TryGetProperty(edge, out var property) && property.ValueKind == JsonValueKind.Number
             ? property.GetDouble()
-            : 0;
+            : throw Malformed("box", $"box.{edge}", name, "a number");
 
-    private static IReadOnlyDictionary<string, double> ReadDoubleMap(JsonElement node, string name)
+    private static IReadOnlyDictionary<string, double> RequireDoubleMap(
+        JsonElement node,
+        string type,
+        string name
+    )
     {
-        var map = new Dictionary<string, double>(StringComparer.Ordinal);
         if (
-            !node.TryGetProperty(name, out var property)
+            !node.TryGetProperty("probabilities", out var property)
             || property.ValueKind != JsonValueKind.Object
         )
         {
-            return map;
+            throw Malformed(type, "probabilities", name, "an object of numbers");
         }
 
+        var map = new Dictionary<string, double>(StringComparer.Ordinal);
         foreach (var item in property.EnumerateObject())
         {
-            if (item.Value.ValueKind is JsonValueKind.Number)
+            if (item.Value.ValueKind != JsonValueKind.Number)
             {
-                map[item.Name] = item.Value.GetDouble();
+                throw Malformed(type, $"probabilities.{item.Name}", name, "a number");
             }
+
+            map[item.Name] = item.Value.GetDouble();
         }
 
         return map;

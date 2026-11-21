@@ -498,7 +498,10 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         form.Headers.ContentType = MediaTypeHeaderValue.Parse(
             $"multipart/form-data; boundary={boundary}"
         );
-        form.Add(new StringContent(json, Encoding.UTF8, "application/json"), "request");
+        // Content type is exactly application/json: StringContent would add a charset.
+        var request = new StringContent(json, Encoding.UTF8);
+        request.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        form.Add(request, "request");
         foreach (var asset in assets)
         {
             var content = new ByteArrayContent(asset.Image.Bytes);

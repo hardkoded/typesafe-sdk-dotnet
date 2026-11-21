@@ -29,9 +29,11 @@ Console.WriteLine(answer.Choice);
 Console.WriteLine(answer.Confidence);
 ```
 
+`Confidence` reads `0` when the API reports none. Use `ReportedConfidence` (`double?`, on choice and score answers) to tell "no confidence reported" (`null`) from a real value.
+
 ## Score
 
-Levels are ordered from low to high. Pass at least two level labels after the instructions.
+Levels are ordered from low to high. Pass at least one level label after the instructions.
 
 ```csharp
 ("urgency", Question.Score(

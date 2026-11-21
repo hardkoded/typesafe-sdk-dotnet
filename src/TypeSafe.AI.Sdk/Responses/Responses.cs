@@ -60,8 +60,11 @@ public sealed class ChoiceAnswer : Answer
     /// <summary>The selected label.</summary>
     public string Choice { get; init; } = "";
 
-    /// <summary>Reported confidence in the selected label.</summary>
+    /// <summary>Reported confidence in the selected label; <c>0</c> when the API reported none. See <see cref="ReportedConfidence" />.</summary>
     public double Confidence { get; init; }
+
+    /// <summary>Reported confidence in the selected label, or <c>null</c> when the API reported none.</summary>
+    public double? ReportedConfidence { get; init; }
 
     /// <summary>Probabilities keyed by label.</summary>
     public IReadOnlyDictionary<string, double> Probabilities { get; init; } =
@@ -77,8 +80,11 @@ public sealed class ScoreAnswer : Answer
     /// <summary>Expected score, which may fall between integer rubric levels.</summary>
     public double Score { get; init; }
 
-    /// <summary>Reported confidence in the score.</summary>
+    /// <summary>Reported confidence in the score; <c>0</c> when the API reported none. See <see cref="ReportedConfidence" />.</summary>
     public double Confidence { get; init; }
+
+    /// <summary>Reported confidence in the score, or <c>null</c> when the API reported none.</summary>
+    public double? ReportedConfidence { get; init; }
 
     /// <summary>Rubric descriptions keyed by score index (string keys matching the API).</summary>
     public IReadOnlyDictionary<string, JsonElement> Legend { get; init; } =
